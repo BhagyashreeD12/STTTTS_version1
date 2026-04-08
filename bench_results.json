@@ -1,0 +1,122 @@
+[
+  {
+    "model": "gpt-5.4-nano",
+    "scenario": "greeting",
+    "description": "Customer opens with a simple greeting",
+    "latency_s": 1.809,
+    "prompt_tokens": 155.0,
+    "completion_tokens": 22.0,
+    "cost_usd": 7.29e-05,
+    "quality_score": 6.0
+  },
+  {
+    "model": "gpt-5.4-nano",
+    "scenario": "menu_browse",
+    "description": "Customer asks what's available",
+    "latency_s": 1.483,
+    "prompt_tokens": 181.0,
+    "completion_tokens": 23.0,
+    "cost_usd": 8.19e-05,
+    "quality_score": 2.0
+  },
+  {
+    "model": "gpt-5.4-nano",
+    "scenario": "recommendation",
+    "description": "Customer asks for a recommendation",
+    "latency_s": 0.816,
+    "prompt_tokens": 218.0,
+    "completion_tokens": 45.0,
+    "cost_usd": 0.0001194,
+    "quality_score": 4.0
+  },
+  {
+    "model": "gpt-5.4-mini",
+    "scenario": "greeting",
+    "description": "Customer opens with a simple greeting",
+    "latency_s": 1.574,
+    "prompt_tokens": 155.0,
+    "completion_tokens": 13.0,
+    "cost_usd": 0.0001747,
+    "quality_score": 2.0
+  },
+  {
+    "model": "gpt-5.4-mini",
+    "scenario": "menu_browse",
+    "description": "Customer asks what's available",
+    "latency_s": 0.987,
+    "prompt_tokens": 181.0,
+    "completion_tokens": 38.0,
+    "cost_usd": 0.0003068,
+    "quality_score": 4.0
+  },
+  {
+    "model": "gpt-5.4-mini",
+    "scenario": "recommendation",
+    "description": "Customer asks for a recommendation",
+    "latency_s": 2.094,
+    "prompt_tokens": 218.0,
+    "completion_tokens": 36.0,
+    "cost_usd": 0.0003255,
+    "quality_score": 2.0
+  },
+  {
+    "model": "gpt-4.1-nano",
+    "scenario": "greeting",
+    "description": "Customer opens with a simple greeting",
+    "latency_s": 0.9,
+    "prompt_tokens": 156.0,
+    "completion_tokens": 15.0,
+    "cost_usd": 2.16e-05,
+    "quality_score": 6.0
+  },
+  {
+    "model": "gpt-4.1-nano",
+    "scenario": "menu_browse",
+    "description": "Customer asks what's available",
+    "latency_s": 1.442,
+    "prompt_tokens": 180.0,
+    "completion_tokens": 29.0,
+    "cost_usd": 2.96e-05,
+    "quality_score": 4.0
+  },
+  {
+    "model": "gpt-4.1-nano",
+    "scenario": "recommendation",
+    "description": "Customer asks for a recommendation",
+    "latency_s": 0.76,
+    "prompt_tokens": 215.0,
+    "completion_tokens": 28.0,
+    "cost_usd": 3.27e-05,
+    "quality_score": 4.0
+  },
+  {
+    "model": "gpt-4o-mini",
+    "scenario": "greeting",
+    "description": "Customer opens with a simple greeting",
+    "latency_s": 0.911,
+    "prompt_tokens": 156.0,
+    "completion_tokens": 7.0,
+    "cost_usd": 2.76e-05,
+    "quality_score": 0.0
+  },
+  {
+    "model": "gpt-4o-mini",
+    "scenario": "menu_browse",
+    "description": "Customer asks what's available",
+    "latency_s": 0.956,
+    "prompt_tokens": 180.0,
+    "completion_tokens": 26.0,
+    "cost_usd": 4.26e-05,
+    "quality_score": 2.0
+  },
+  {
+    "model": "gpt-4o-mini",
+    "scenario": "recommendation",
+    "description": "Customer asks for a recommendation",
+    "latency_s": 0.947,
+    "prompt_tokens": 215.0,
+    "completion_tokens": 27.0,
+    "cost_usd": 4.84e-05,
+    "quality_score": 6.0
+  }
+]

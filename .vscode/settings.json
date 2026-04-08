@@ -1,0 +1,10 @@
+{
+  "python.analysis.typeCheckingMode": "standard",
+  "python.defaultInterpreterPath": "D:/AI/delayed-streams-modeling/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "D:/AI/delayed-streams-modeling/.venv/Lib/site-packages"
+  ],
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.useLibraryCodeForTypes": true
+}
