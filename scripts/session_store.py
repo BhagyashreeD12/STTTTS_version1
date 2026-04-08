@@ -54,7 +54,7 @@ class SessionStore:
         base_dir: Path | None = None,
     ) -> None:
         self.session_id = session_id
-        self._base_dir  = Path(base_dir) if base_dir else _DEFAULT_BASE_DIR
+        self._base_dir = Path(base_dir) if base_dir else _DEFAULT_BASE_DIR
         self._data: dict[str, Any] = {}
         self._base_dir.mkdir(parents=True, exist_ok=True)
 

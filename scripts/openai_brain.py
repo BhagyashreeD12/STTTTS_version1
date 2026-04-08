@@ -37,44 +37,44 @@ logger = logging.getLogger(__name__)
 MODEL_CONFIGS: dict[str, dict] = {
     # ── GPT-5.4 family ────────────────────────────────────────
     "gpt-5.4-nano": {
-        "input_per_1m":   0.30,
-        "output_per_1m":  1.20,
+        "input_per_1m": 0.30,
+        "output_per_1m": 1.20,
         "tier": "nano",
         "note": "Fastest & cheapest — great for simple intents",
     },
     "gpt-5.4-mini": {
-        "input_per_1m":   0.75,
-        "output_per_1m":  4.50,
+        "input_per_1m": 0.75,
+        "output_per_1m": 4.50,
         "tier": "mini",
         "note": "Best price/quality balance for café Q&A (current default)",
     },
     "gpt-5.4-pro": {
-        "input_per_1m":   7.50,
+        "input_per_1m": 7.50,
         "output_per_1m": 30.00,
         "tier": "pro",
         "note": "Premium — overkill for menu ordering, but flawless NLU",
     },
     # ── GPT-4.1 family (fallback / comparison) ─────────────────
     "gpt-4.1-nano": {
-        "input_per_1m":   0.10,
-        "output_per_1m":  0.40,
+        "input_per_1m": 0.10,
+        "output_per_1m": 0.40,
         "tier": "nano",
         "note": "Ultra-cheap older gen, good baseline",
     },
     "gpt-4.1-mini": {
-        "input_per_1m":   0.40,
-        "output_per_1m":  1.60,
+        "input_per_1m": 0.40,
+        "output_per_1m": 1.60,
         "tier": "mini",
         "note": "Solid older-gen budget model",
     },
     "gpt-4o-mini": {
-        "input_per_1m":   0.15,
-        "output_per_1m":  0.60,
+        "input_per_1m": 0.15,
+        "output_per_1m": 0.60,
         "tier": "mini",
         "note": "Proven, very low cost — good fallback option",
     },
     "gpt-4o": {
-        "input_per_1m":   2.50,
+        "input_per_1m": 2.50,
         "output_per_1m": 10.00,
         "tier": "full",
         "note": "High quality, higher cost",
@@ -96,6 +96,7 @@ def list_models() -> list[str]:
 
 
 # ── Brain class ───────────────────────────────────────────────────────────────
+
 
 class OpenAIBrain:
     """Thin wrapper around the OpenAI chat completions endpoint.
@@ -121,11 +122,16 @@ class OpenAIBrain:
             logger.warning(
                 "[Brain] '%s' not in MODEL_CONFIGS; cost tracking disabled.", self.model
             )
-            cfg = {"input_per_1m": 0.0, "output_per_1m": 0.0, "tier": "unknown", "note": ""}
+            cfg = {
+                "input_per_1m": 0.0,
+                "output_per_1m": 0.0,
+                "tier": "unknown",
+                "note": "",
+            }
 
-        self._input_rate  = cfg["input_per_1m"]
+        self._input_rate = cfg["input_per_1m"]
         self._output_rate = cfg["output_per_1m"]
-        self._usd_to_inr  = float(os.getenv(INR_ENV_KEY, "84"))
+        self._usd_to_inr = float(os.getenv(INR_ENV_KEY, "84"))
 
         logger.info("[Brain] Initialized — model=%s  (%s)", self.model, cfg["note"])
 
@@ -160,7 +166,9 @@ class OpenAIBrain:
                 **self._token_limit_kwarg(self.model, max_tokens),
             )
         except AuthenticationError as exc:
-            logger.error("[Brain] Authentication failed — check OPENAI_API_KEY: %s", exc)
+            logger.error(
+                "[Brain] Authentication failed — check OPENAI_API_KEY: %s", exc
+            )
             raise
         except RateLimitError as exc:
             logger.warning("[Brain] Rate limit hit: %s", exc)
@@ -170,22 +178,21 @@ class OpenAIBrain:
             raise
 
         latency = time.perf_counter() - t0
-        usage   = resp.usage
+        usage = resp.usage
 
-        cost_usd = (
-            (usage.prompt_tokens / 1_000_000) * self._input_rate
-            + (usage.completion_tokens / 1_000_000) * self._output_rate
-        )
+        cost_usd = (usage.prompt_tokens / 1_000_000) * self._input_rate + (
+            usage.completion_tokens / 1_000_000
+        ) * self._output_rate
         cost_inr = cost_usd * self._usd_to_inr
 
         usage_info = {
-            "model":             self.model,
-            "prompt_tokens":     usage.prompt_tokens,
+            "model": self.model,
+            "prompt_tokens": usage.prompt_tokens,
             "completion_tokens": usage.completion_tokens,
-            "total_tokens":      usage.total_tokens,
-            "cost_usd":          cost_usd,
-            "cost_inr":          cost_inr,
-            "latency_s":         round(latency, 3),
+            "total_tokens": usage.total_tokens,
+            "cost_usd": cost_usd,
+            "cost_inr": cost_inr,
+            "latency_s": round(latency, 3),
         }
 
         logger.info(

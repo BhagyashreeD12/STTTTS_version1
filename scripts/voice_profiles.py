@@ -48,6 +48,7 @@ from typing import Optional
 # Profile dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class VoiceProfile:
     """Immutable descriptor for a single TTS voice configuration.
@@ -67,18 +68,19 @@ class VoiceProfile:
     style           Optional prosody/style hint — engine-specific, ignored if unsupported.
     extra           Catch-all dict for any additional provider-specific keyword arguments.
     """
-    id:              str
-    provider:        str
-    display_name:    str
-    description:     str           = ""
-    voice_id:        Optional[str] = None
-    model_path:      Optional[str] = None
-    config_path:     Optional[str] = None
+
+    id: str
+    provider: str
+    display_name: str
+    description: str = ""
+    voice_id: Optional[str] = None
+    model_path: Optional[str] = None
+    config_path: Optional[str] = None
     reference_audio: Optional[str] = None
-    speed:           float         = 1.0
-    language:        str           = "en-us"
-    style:           Optional[str] = None
-    extra:           dict          = field(default_factory=dict)
+    speed: float = 1.0
+    language: str = "en-us"
+    style: Optional[str] = None
+    extra: dict = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------
@@ -101,58 +103,58 @@ def _register(*profiles: VoiceProfile) -> None:
 # ===========================================================================
 _register(
     VoiceProfile(
-        id           = "kokoro_heart",
-        provider     = "kokoro",
-        display_name = "Kokoro — Heart (af_heart)",
-        description  = "Warm American female voice, natural cadence. Good for intake calls.",
-        voice_id     = "af_heart",
-        speed        = 1.1,
-        language     = "en-us",
+        id="kokoro_heart",
+        provider="kokoro",
+        display_name="Kokoro — Heart (af_heart)",
+        description="Warm American female voice, natural cadence. Good for intake calls.",
+        voice_id="af_heart",
+        speed=1.1,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "kokoro_bella",
-        provider     = "kokoro",
-        display_name = "Kokoro — Bella (af_bella)",
-        description  = "Bright, energetic American female voice.",
-        voice_id     = "af_bella",
-        speed        = 1.0,
-        language     = "en-us",
+        id="kokoro_bella",
+        provider="kokoro",
+        display_name="Kokoro — Bella (af_bella)",
+        description="Bright, energetic American female voice.",
+        voice_id="af_bella",
+        speed=1.0,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "kokoro_sky",
-        provider     = "kokoro",
-        display_name = "Kokoro — Sky (af_sky)",
-        description  = "Calm, professional American female voice.",
-        voice_id     = "af_sky",
-        speed        = 1.0,
-        language     = "en-us",
+        id="kokoro_sky",
+        provider="kokoro",
+        display_name="Kokoro — Sky (af_sky)",
+        description="Calm, professional American female voice.",
+        voice_id="af_sky",
+        speed=1.0,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "kokoro_michael",
-        provider     = "kokoro",
-        display_name = "Kokoro — Michael (am_michael)",
-        description  = "Deep, authoritative American male voice.",
-        voice_id     = "am_michael",
-        speed        = 1.0,
-        language     = "en-us",
+        id="kokoro_michael",
+        provider="kokoro",
+        display_name="Kokoro — Michael (am_michael)",
+        description="Deep, authoritative American male voice.",
+        voice_id="am_michael",
+        speed=1.0,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "kokoro_adam",
-        provider     = "kokoro",
-        display_name = "Kokoro — Adam (am_adam)",
-        description  = "Natural American male voice.",
-        voice_id     = "am_adam",
-        speed        = 1.0,
-        language     = "en-us",
+        id="kokoro_adam",
+        provider="kokoro",
+        display_name="Kokoro — Adam (am_adam)",
+        description="Natural American male voice.",
+        voice_id="am_adam",
+        speed=1.0,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "kokoro_emma",
-        provider     = "kokoro",
-        display_name = "Kokoro — Emma (bf_emma)",
-        description  = "Warm British female voice.",
-        voice_id     = "bf_emma",
-        speed        = 1.0,
-        language     = "en-gb",
+        id="kokoro_emma",
+        provider="kokoro",
+        display_name="Kokoro — Emma (bf_emma)",
+        description="Warm British female voice.",
+        voice_id="bf_emma",
+        speed=1.0,
+        language="en-gb",
     ),
 )
 
@@ -167,37 +169,37 @@ _register(
 # ===========================================================================
 _register(
     VoiceProfile(
-        id           = "piper_amy",
-        provider     = "piper",
-        display_name = "Piper — Amy (en_US/amy/medium)",
-        description  = "Clear American female voice. Lightweight & fully offline.",
-        voice_id     = "en_US-amy-medium",
-        model_path   = "models/piper/en_US-amy-medium.onnx",
-        config_path  = "models/piper/en_US-amy-medium.onnx.json",
-        speed        = 1.0,
-        language     = "en-us",
+        id="piper_amy",
+        provider="piper",
+        display_name="Piper — Amy (en_US/amy/medium)",
+        description="Clear American female voice. Lightweight & fully offline.",
+        voice_id="en_US-amy-medium",
+        model_path="models/piper/en_US-amy-medium.onnx",
+        config_path="models/piper/en_US-amy-medium.onnx.json",
+        speed=1.0,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "piper_lessac",
-        provider     = "piper",
-        display_name = "Piper — Lessac (en_US/lessac/high)",
-        description  = "High-quality American male voice. Fully offline.",
-        voice_id     = "en_US-lessac-high",
-        model_path   = "models/piper/en_US-lessac-high.onnx",
-        config_path  = "models/piper/en_US-lessac-high.onnx.json",
-        speed        = 1.0,
-        language     = "en-us",
+        id="piper_lessac",
+        provider="piper",
+        display_name="Piper — Lessac (en_US/lessac/high)",
+        description="High-quality American male voice. Fully offline.",
+        voice_id="en_US-lessac-high",
+        model_path="models/piper/en_US-lessac-high.onnx",
+        config_path="models/piper/en_US-lessac-high.onnx.json",
+        speed=1.0,
+        language="en-us",
     ),
     VoiceProfile(
-        id           = "piper_jenny",
-        provider     = "piper",
-        display_name = "Piper — Jenny (en_GB/jenny_dioco/medium)",
-        description  = "British female voice from Piper.",
-        voice_id     = "en_GB-jenny_dioco-medium",
-        model_path   = "models/piper/en_GB-jenny_dioco-medium.onnx",
-        config_path  = "models/piper/en_GB-jenny_dioco-medium.onnx.json",
-        speed        = 1.0,
-        language     = "en-gb",
+        id="piper_jenny",
+        provider="piper",
+        display_name="Piper — Jenny (en_GB/jenny_dioco/medium)",
+        description="British female voice from Piper.",
+        voice_id="en_GB-jenny_dioco-medium",
+        model_path="models/piper/en_GB-jenny_dioco-medium.onnx",
+        config_path="models/piper/en_GB-jenny_dioco-medium.onnx.json",
+        speed=1.0,
+        language="en-gb",
     ),
 )
 
@@ -210,24 +212,24 @@ _register(
 # ===========================================================================
 _register(
     VoiceProfile(
-        id              = "chatterbox_custom",
-        provider        = "chatterbox",
-        display_name    = "Chatterbox — Custom Clone",
-        description     = "Voice clone conditioned on a custom reference WAV.",
-        reference_audio = "voices/custom_speaker.wav",
-        speed           = 1.0,
-        language        = "en-us",
-        extra           = {"exaggeration": 0.5, "cfg_weight": 0.5},
+        id="chatterbox_custom",
+        provider="chatterbox",
+        display_name="Chatterbox — Custom Clone",
+        description="Voice clone conditioned on a custom reference WAV.",
+        reference_audio="voices/custom_speaker.wav",
+        speed=1.0,
+        language="en-us",
+        extra={"exaggeration": 0.5, "cfg_weight": 0.5},
     ),
     VoiceProfile(
-        id              = "chatterbox_professional",
-        provider        = "chatterbox",
-        display_name    = "Chatterbox — Professional Male",
-        description     = "Voice conditioned on a professional-sounding male reference.",
-        reference_audio = "voices/professional_male.wav",
-        speed           = 1.0,
-        language        = "en-us",
-        extra           = {"exaggeration": 0.3, "cfg_weight": 0.5},
+        id="chatterbox_professional",
+        provider="chatterbox",
+        display_name="Chatterbox — Professional Male",
+        description="Voice conditioned on a professional-sounding male reference.",
+        reference_audio="voices/professional_male.wav",
+        speed=1.0,
+        language="en-us",
+        extra={"exaggeration": 0.3, "cfg_weight": 0.5},
     ),
 )
 
@@ -240,15 +242,15 @@ _register(
 # ===========================================================================
 _register(
     VoiceProfile(
-        id              = "xtts_custom",
-        provider        = "xtts",
-        display_name    = "XTTS v2 — Custom Clone",
-        description     = "Multilingual voice clone using Coqui XTTS v2.",
-        reference_audio = "voices/custom_speaker.wav",
-        model_path      = "models/xtts_v2/",
-        speed           = 1.0,
-        language        = "en",
-        extra           = {"temperature": 0.7, "length_penalty": 1.0},
+        id="xtts_custom",
+        provider="xtts",
+        display_name="XTTS v2 — Custom Clone",
+        description="Multilingual voice clone using Coqui XTTS v2.",
+        reference_audio="voices/custom_speaker.wav",
+        model_path="models/xtts_v2/",
+        speed=1.0,
+        language="en",
+        extra={"temperature": 0.7, "length_penalty": 1.0},
     ),
 )
 
@@ -260,14 +262,14 @@ _register(
 # ===========================================================================
 _register(
     VoiceProfile(
-        id           = "qwen3_default",
-        provider     = "qwen3",
-        display_name = "Qwen3-TTS — Default",
-        description  = "Alibaba Qwen3-TTS open-source model, default speaker.",
-        voice_id     = "default",
-        model_path   = "models/qwen3_tts/",
-        speed        = 1.0,
-        language     = "en",
+        id="qwen3_default",
+        provider="qwen3",
+        display_name="Qwen3-TTS — Default",
+        description="Alibaba Qwen3-TTS open-source model, default speaker.",
+        voice_id="default",
+        model_path="models/qwen3_tts/",
+        speed=1.0,
+        language="en",
     ),
 )
 
@@ -287,8 +289,7 @@ def get_voice_profile(profile_id: str) -> VoiceProfile:
     if profile_id not in _PROFILES:
         available = ", ".join(sorted(_PROFILES))
         raise KeyError(
-            f"Unknown voice profile {profile_id!r}. "
-            f"Available profiles: {available}"
+            f"Unknown voice profile {profile_id!r}. Available profiles: {available}"
         )
     return _PROFILES[profile_id]
 

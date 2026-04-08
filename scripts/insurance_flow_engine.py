@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar, Optional
 
-from openai_brain import OpenAIBrain, get_brain
+from openai_brain import OpenAIBrain
 from insurance_prompt import (
     INSURANCE_SYSTEM_PROMPT,
     NATURALIZE_PROMPT,
@@ -59,31 +59,32 @@ _MAX_FIELD_RETRIES: int = 3
 # ── Virtual steps not present in Excel (derived from conditions column) ────────
 _VIRTUAL_STEPS: dict[str, dict] = {
     "2.2a": {
-        "id":             "2.2a",
-        "block":          "DRIVER",
-        "question":       "Could you tell me who is the registered owner and primary operator of the vehicle?",
-        "options":        [],
-        "expected":       None,
-        "conditions":     "Follow-up if 2.2 = No",
-        "branch_logic":   None,
+        "id": "2.2a",
+        "block": "DRIVER",
+        "question": "Could you tell me who is the registered owner and primary operator of the vehicle?",
+        "options": [],
+        "expected": None,
+        "conditions": "Follow-up if 2.2 = No",
+        "branch_logic": None,
         "in_driver_loop": True,
         "in_vehicle_loop": False,
     },
     "1.4_desc": {
-        "id":              "1.4_desc",
-        "block":           "START",
-        "question":        "Could you briefly describe those modifications for me?",
-        "options":         [],
-        "expected":        None,
-        "conditions":      "Follow-up if 1.4 = Yes",
-        "branch_logic":    None,
-        "in_driver_loop":  False,
+        "id": "1.4_desc",
+        "block": "START",
+        "question": "Could you briefly describe those modifications for me?",
+        "options": [],
+        "expected": None,
+        "conditions": "Follow-up if 1.4 = Yes",
+        "branch_logic": None,
+        "in_driver_loop": False,
         "in_vehicle_loop": False,
     },
 }
 
 
 # ── Flow loader ───────────────────────────────────────────────────────────────
+
 
 def load_flow(path: Optional[Path] = None) -> dict:
     """Load insurance_flow.json. Falls back to default path."""
@@ -93,6 +94,7 @@ def load_flow(path: Optional[Path] = None) -> dict:
 
 
 # ── Session ───────────────────────────────────────────────────────────────────
+
 
 @dataclass
 class InsuranceSession:
@@ -110,33 +112,31 @@ class InsuranceSession:
     flow: dict = field(repr=False)
 
     def __post_init__(self) -> None:
-        self._step_map: dict[str, dict] = {
-            s["id"]: s for s in self.flow["steps"]
-        }
+        self._step_map: dict[str, dict] = {s["id"]: s for s in self.flow["steps"]}
         self._step_map.update(_VIRTUAL_STEPS)
         # Canonical step order from JSON — single source of truth for sequencing.
         self._sequence: list[str] = [s["id"] for s in self.flow["steps"]]
 
-        self.current_step_id: str    = "1.1"
+        self.current_step_id: str = "1.1"
         self.answers: dict[str, str] = {}
         self._clarification_counts: dict[str, int] = {}
         self._best_extracted: dict[str, Any] = {}  # best valid value seen per step
 
-        self.driver_count:         int  = 0
-        self.current_driver_idx:   int  = 0   # 0-based
-        self.vehicle_count:        int  = 0
-        self.current_vehicle_idx:  int  = 0   # 0-based
-        self.in_driver_loop:       bool = False
-        self.in_vehicle_loop:      bool = False
+        self.driver_count: int = 0
+        self.current_driver_idx: int = 0  # 0-based
+        self.vehicle_count: int = 0
+        self.current_vehicle_idx: int = 0  # 0-based
+        self.in_driver_loop: bool = False
+        self.in_vehicle_loop: bool = False
 
         self._skip_steps: set[str] = set()
 
         self.collected_data: dict[str, Any] = {}
-        self.session_id:     str            = uuid.uuid4().hex[:8]
-        self._store:         SessionStore   = SessionStore(self.session_id)
+        self.session_id: str = uuid.uuid4().hex[:8]
+        self._store: SessionStore = SessionStore(self.session_id)
 
-        self.ended:      bool = False
-        self.end_reason: str  = ""
+        self.ended: bool = False
+        self.end_reason: str = ""
 
     @classmethod
     def from_json(cls, path: Optional[Path] = None) -> "InsuranceSession":
@@ -148,7 +148,10 @@ class InsuranceSession:
     def get_greeting(self) -> str:
         """Return the opening statement (step 1.1) with agent name substituted."""
         step = self._step_map.get("1.1", {})
-        raw  = step.get("question", f"Hi, I'm {AGENT_NAME}. Is it okay if I collect a few details for your insurance quote?")
+        raw = step.get(
+            "question",
+            f"Hi, I'm {AGENT_NAME}. Is it okay if I collect a few details for your insurance quote?",
+        )
         return raw.replace("<Voice_Agent_Name>", AGENT_NAME)
 
     def get_current_step(self) -> Optional[dict]:
@@ -172,12 +175,14 @@ class InsuranceSession:
 
         # 0. Empty / whitespace STT output — retry the same step without advancing.
         if not user_text or not user_text.strip():
-            logger.info("[Flow] step=%-6s | empty STT input — retrying", self.current_step_id)
+            logger.info(
+                "[Flow] step=%-6s | empty STT input — retrying", self.current_step_id
+            )
             return self._empty_input_retry(self.get_current_step())
 
         # 1. Hard-stop check — any turn can trigger an immediate exit
         if should_exit_flow(user_text):
-            self.ended      = True
+            self.ended = True
             self.end_reason = "user_exit"
             return self._naturalize_farewell(REFUSAL_FAREWELL, brain, history)
 
@@ -187,7 +192,9 @@ class InsuranceSession:
             # 1a. Detect clarification/objection/off-topic BEFORE storing anything.
             intent = classify_intent(user_text)
             if intent == "clarification":
-                return self._handle_clarification_question(user_text, step, brain, history)
+                return self._handle_clarification_question(
+                    user_text, step, brain, history
+                )
             if intent == "objection":
                 return self._handle_objection(step, brain, history)
             if intent == "off_topic":
@@ -196,7 +203,9 @@ class InsuranceSession:
             # intent == "answer" — record and validate.
             key = self._answer_key(self.current_step_id)
             self.answers[key] = user_text.strip()
-            logger.info("[Flow] step=%-6s | answer=%r", self.current_step_id, user_text[:60])
+            logger.info(
+                "[Flow] step=%-6s | answer=%r", self.current_step_id, user_text[:60]
+            )
 
             # 1b. Extract, normalise, and validate
             options = step.get("options") or []
@@ -218,7 +227,7 @@ class InsuranceSession:
             # Resolve the value to persist:
             #   valid answer  → store the normalised extraction
             #   retries exhausted → use best previously-validated value, else None
-            field_def  = STEP_FIELD_DEFS.get(self.current_step_id, {})
+            field_def = STEP_FIELD_DEFS.get(self.current_step_id, {})
             field_name = field_def.get("field_name")
             if field_name:
                 if self.in_driver_loop:
@@ -252,11 +261,15 @@ class InsuranceSession:
         # 4. Act on the action
         if action["action"] == "clarify_consent":
             # Do NOT advance the step — re-ask with soft clarification
-            del self.answers[self._answer_key(self.current_step_id)]  # discard ambiguous answer
-            return self._naturalize_farewell(AMBIGUOUS_CONSENT_CLARIFICATION, brain, history)
+            del self.answers[
+                self._answer_key(self.current_step_id)
+            ]  # discard ambiguous answer
+            return self._naturalize_farewell(
+                AMBIGUOUS_CONSENT_CLARIFICATION, brain, history
+            )
 
         if action["action"] == "end_call":
-            self.ended      = True
+            self.ended = True
             self.end_reason = action.get("reason", "call_ended")
             farewell = action.get(
                 "message",
@@ -265,35 +278,42 @@ class InsuranceSession:
             return self._naturalize_farewell(farewell, brain, history)
 
         if action["action"] == "done":
-            self.ended      = True
+            self.ended = True
             self.end_reason = "completed"
-            farewell_step  = self._step_map.get("7.2", {})
-            farewell_q     = farewell_step.get("question", "Thank you so much! We'll be in touch.")
-            return self._naturalize_farewell(farewell_q.replace("<Voice_Agent_Name>", AGENT_NAME), brain, history)
+            farewell_step = self._step_map.get("7.2", {})
+            farewell_q = farewell_step.get(
+                "question", "Thank you so much! We'll be in touch."
+            )
+            return self._naturalize_farewell(
+                farewell_q.replace("<Voice_Agent_Name>", AGENT_NAME), brain, history
+            )
 
         if action["action"] == "continue":
             next_id = action["next_step_id"]
             # Explicit loop-iteration labels take priority; otherwise auto-detect
             # a block transition from the JSON block metadata.
-            block_transition = (
-                action.get("block_transition")
-                or self._block_transition_tag(self.current_step_id, next_id)
-            )
+            block_transition = action.get(
+                "block_transition"
+            ) or self._block_transition_tag(self.current_step_id, next_id)
             self.current_step_id = next_id
             # Sync loop membership from JSON step metadata.
             _ns = self._step_map.get(next_id, {})
-            self.in_driver_loop  = _ns.get("in_driver_loop",  False)
+            self.in_driver_loop = _ns.get("in_driver_loop", False)
             self.in_vehicle_loop = _ns.get("in_vehicle_loop", False)
 
             next_step = self._step_map.get(next_id)
             if not next_step:
-                logger.error("[Flow] Step '%s' not in step_map — ending session.", next_id)
-                self.ended      = True
+                logger.error(
+                    "[Flow] Step '%s' not in step_map — ending session.", next_id
+                )
+                self.ended = True
                 self.end_reason = "error"
                 return "I'm sorry, something went wrong on my end. Thank you for your time. Goodbye!"
 
             return self._naturalize_question(
-                next_step, brain, history,
+                next_step,
+                brain,
+                history,
                 block_transition=block_transition,
             )
 
@@ -305,14 +325,18 @@ class InsuranceSession:
     def get_state_summary(self) -> dict:
         """Snapshot of current state — useful for debug logging."""
         return {
-            "current_step":      self.current_step_id,
-            "driver_count":      self.driver_count,
-            "current_driver":    self.current_driver_idx + 1 if self.in_driver_loop else None,
-            "vehicle_count":     self.vehicle_count,
-            "current_vehicle":   self.current_vehicle_idx + 1 if self.in_vehicle_loop else None,
+            "current_step": self.current_step_id,
+            "driver_count": self.driver_count,
+            "current_driver": self.current_driver_idx + 1
+            if self.in_driver_loop
+            else None,
+            "vehicle_count": self.vehicle_count,
+            "current_vehicle": self.current_vehicle_idx + 1
+            if self.in_vehicle_loop
+            else None,
             "answers_collected": len(self.answers),
-            "ended":             self.ended,
-            "end_reason":        self.end_reason,
+            "ended": self.ended,
+            "end_reason": self.end_reason,
         }
 
     # ── Branching logic ────────────────────────────────────────────────────
@@ -337,7 +361,11 @@ class InsuranceSession:
         # ── branch_logic dispatch ─────────────────────────────────────────
         if branch_logic == "consent_check":
             if is_negative_intent(a):
-                return {"action": "end_call", "reason": "no_consent", "message": REFUSAL_FAREWELL}
+                return {
+                    "action": "end_call",
+                    "reason": "no_consent",
+                    "message": REFUSAL_FAREWELL,
+                }
             if is_ambiguous_intent(a) and not is_affirmative_intent(a):
                 return {"action": "clarify_consent"}
             return {"action": "continue", "next_step_id": "1.2"}
@@ -349,8 +377,8 @@ class InsuranceSession:
 
         if branch_logic == "driver_loop_start":
             count = self._extract_number(a, default=1)
-            self.driver_count       = count
-            self.in_driver_loop     = True
+            self.driver_count = count
+            self.in_driver_loop = True
             self.current_driver_idx = 0
             return {"action": "continue", "next_step_id": "2.2"}
 
@@ -370,8 +398,8 @@ class InsuranceSession:
             if next_idx < self.driver_count:
                 self.current_driver_idx = next_idx
                 return {
-                    "action":           "continue",
-                    "next_step_id":     "2.2",
+                    "action": "continue",
+                    "next_step_id": "2.2",
                     "block_transition": f"next_driver_{next_idx + 1}",
                 }
             self.in_driver_loop = False
@@ -379,11 +407,13 @@ class InsuranceSession:
 
         if branch_logic == "vehicle_loop_start":
             count = self._extract_number(a, default=1)
-            self.vehicle_count       = count
-            self.in_vehicle_loop     = True
+            self.vehicle_count = count
+            self.in_vehicle_loop = True
             self.current_vehicle_idx = 0
             if count == 1:
-                self._skip_steps.add("3.3")   # skip principal-driver Q for single vehicle
+                self._skip_steps.add(
+                    "3.3"
+                )  # skip principal-driver Q for single vehicle
                 return {"action": "continue", "next_step_id": "3.4"}
             return {"action": "continue", "next_step_id": "3.3"}
 
@@ -394,10 +424,9 @@ class InsuranceSession:
             # Prefer the normalised extracted value so that casual phrases like
             # "I'm still paying it off" correctly branch to "financed" rather
             # than accidentally matching "own" in the raw text.
-            veh_key  = f"vehicle_{self.current_vehicle_idx + 1}_ownership_type"
-            ownership = (
-                self.collected_data.get(veh_key)
-                or self.collected_data.get("ownership_type")
+            veh_key = f"vehicle_{self.current_vehicle_idx + 1}_ownership_type"
+            ownership = self.collected_data.get(veh_key) or self.collected_data.get(
+                "ownership_type"
             )
             if ownership is None:
                 # Graceful fallback when extraction failed (e.g. 3rd retry).
@@ -407,7 +436,7 @@ class InsuranceSession:
                     else "other"
                 )
             if ownership == "owned":
-                self._skip_steps.add("3.5")   # outright owners skip financing Q
+                self._skip_steps.add("3.5")  # outright owners skip financing Q
                 return {"action": "continue", "next_step_id": "3.6"}
             return {"action": "continue", "next_step_id": "3.5"}
 
@@ -418,8 +447,8 @@ class InsuranceSession:
                 self.current_vehicle_idx = next_idx
                 next_start = "3.3" if self.vehicle_count > 1 else "3.4"
                 return {
-                    "action":           "continue",
-                    "next_step_id":     next_start,
+                    "action": "continue",
+                    "next_step_id": next_start,
                     "block_transition": f"next_vehicle_{next_idx + 1}",
                 }
             self.in_vehicle_loop = False
@@ -427,7 +456,9 @@ class InsuranceSession:
 
         if branch_logic == "confirmation_check":
             if self._is_no(a):
-                logger.info("[Flow] User declined final confirmation — ending politely.")
+                logger.info(
+                    "[Flow] User declined final confirmation — ending politely."
+                )
             return {"action": "continue", "next_step_id": "7.2"}
 
         if branch_logic == "farewell":
@@ -460,7 +491,7 @@ class InsuranceSession:
         explicitly via ``block_transition`` in the action dict.
         """
         from_block = self._step_map.get(from_id, {}).get("block", "")
-        to_block   = self._step_map.get(to_id,   {}).get("block", "")
+        to_block = self._step_map.get(to_id, {}).get("block", "")
         if from_block and to_block and from_block != to_block:
             return to_block.lower() + "_section"
         return None
@@ -470,7 +501,9 @@ class InsuranceSession:
         try:
             idx = self._sequence.index(current_id)
         except ValueError:
-            logger.warning("[Flow] '%s' not in JSON sequence — falling back to 7.1", current_id)
+            logger.warning(
+                "[Flow] '%s' not in JSON sequence — falling back to 7.1", current_id
+            )
             return "7.1"
 
         for i in range(idx + 1, len(self._sequence)):
@@ -490,7 +523,7 @@ class InsuranceSession:
         block_transition: Optional[str] = None,
     ) -> str:
         """Use OpenAI to rephrase the raw question naturally for voice."""
-        raw_q   = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
+        raw_q = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
         options = step.get("options", [])
 
         # Build loop context string when inside a loop
@@ -516,10 +549,15 @@ class InsuranceSession:
             loop_ctx = f"You're now collecting information for vehicle {idx_str}."
             block_transition = None
 
-        user_prompt = build_naturalize_prompt(raw_q, options, block_transition, loop_ctx)
+        user_prompt = build_naturalize_prompt(
+            raw_q, options, block_transition, loop_ctx
+        )
 
         messages = [
-            {"role": "system", "content": INSURANCE_SYSTEM_PROMPT + "\n\n" + NATURALIZE_PROMPT},
+            {
+                "role": "system",
+                "content": INSURANCE_SYSTEM_PROMPT + "\n\n" + NATURALIZE_PROMPT,
+            },
             *history,
             {"role": "user", "content": user_prompt},
         ]
@@ -536,8 +574,10 @@ class InsuranceSession:
             )
             return reply.strip() if reply else raw_q
         except Exception as exc:
-            logger.error("[Flow] Naturalization failed for step %s: %s", step["id"], exc)
-            return raw_q   # fall back to raw question text
+            logger.error(
+                "[Flow] Naturalization failed for step %s: %s", step["id"], exc
+            )
+            return raw_q  # fall back to raw question text
 
     def _naturalize_farewell(
         self, farewell_text: str, brain: OpenAIBrain, history: list
@@ -547,7 +587,7 @@ class InsuranceSession:
             {"role": "system", "content": INSURANCE_SYSTEM_PROMPT},
             *history,
             {
-                "role":    "user",
+                "role": "user",
                 "content": (
                     f"Deliver this closing message naturally on a voice call — "
                     f"warm and brief: {farewell_text}"
@@ -573,20 +613,20 @@ class InsuranceSession:
 
         Flow position is NOT advanced and nothing is stored.
         """
-        raw_q   = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
+        raw_q = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
         options = step.get("options") or []
         opts_str = (
             f" The options are: {format_options_for_voice(options)}." if options else ""
         )
-        field_def  = STEP_FIELD_DEFS.get(self.current_step_id, {})
+        field_def = STEP_FIELD_DEFS.get(self.current_step_id, {})
         field_type = field_def.get("field_type", "free_text")
         _fmt_hints: dict[str, str] = {
             "phone_number": "We need a ten-digit phone number, for example 416-555-0199.",
-            "date":         "A date like March 26th 2026 works perfectly.",
-            "month_year":   "Just month and year is fine, like January 2010.",
-            "number":       "Just a number, like 1 or 2.",
-            "currency":     "A dollar amount, like one hundred and sixty thousand.",
-            "yes_no":       "Just yes or no.",
+            "date": "A date like March 26th 2026 works perfectly.",
+            "month_year": "Just month and year is fine, like January 2010.",
+            "number": "Just a number, like 1 or 2.",
+            "currency": "A dollar amount, like one hundred and sixty thousand.",
+            "yes_no": "Just yes or no.",
         }
         fmt_hint = _fmt_hints.get(field_type, "")
         prompt = (
@@ -616,7 +656,7 @@ class InsuranceSession:
 
         Flow position is NOT advanced and nothing is stored.
         """
-        raw_q   = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
+        raw_q = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
         options = step.get("options") or []
         opts_str = (
             f" The options are: {format_options_for_voice(options)}." if options else ""
@@ -648,7 +688,7 @@ class InsuranceSession:
 
         Flow position is NOT advanced and nothing is stored.
         """
-        raw_q   = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
+        raw_q = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
         options = step.get("options") or []
         opts_str = (
             f" The options are: {format_options_for_voice(options)}." if options else ""
@@ -670,22 +710,22 @@ class InsuranceSession:
             return raw_q
 
     _CLARIFICATION_HINTS: ClassVar[dict[str, str]] = {
-        "invalid_length":      "The number wasn't long enough to be a valid phone number — we need ten digits.",
-        "invalid_area_code":   "That area code doesn't look right for a Canadian number.",
+        "invalid_length": "The number wasn't long enough to be a valid phone number — we need ten digits.",
+        "invalid_area_code": "That area code doesn't look right for a Canadian number.",
         "unrecognised_format": "The format wasn't clear.",
-        "date_in_past":        "That date has already passed — we need a policy start date from today or later.",
-        "year_out_of_range":   "That year doesn't look right for a Canadian licence date. It should be a past year, not a future one.",
-        "not_a_number":        "We need a number there.",
-        "below_minimum":       "That number seems too low.",
-        "above_maximum":       "That number seems unrealistically high.",
-        "no_option_match":     "That didn't match the available choices.",
-        "unclear_yes_no":      "It wasn't clear if that was a yes or a no.",
-        "empty_answer":        "No answer was detected.",
+        "date_in_past": "That date has already passed — we need a policy start date from today or later.",
+        "year_out_of_range": "That year doesn't look right for a Canadian licence date. It should be a past year, not a future one.",
+        "not_a_number": "We need a number there.",
+        "below_minimum": "That number seems too low.",
+        "above_maximum": "That number seems unrealistically high.",
+        "no_option_match": "That didn't match the available choices.",
+        "unclear_yes_no": "It wasn't clear if that was a yes or a no.",
+        "empty_answer": "No answer was detected.",
         # Categorical fields
-        "no_marital_match":    "You can say single, married, common law, divorced, or widowed.",
-        "no_ownership_match":  "Is it owned outright, financed, or leased?",
-        "no_condition_match":  "Is it new, used, or a demo vehicle?",
-        "not_a_currency":      "Could you give me a dollar amount — like 'a hundred and sixty thousand'?",
+        "no_marital_match": "You can say single, married, common law, divorced, or widowed.",
+        "no_ownership_match": "Is it owned outright, financed, or leased?",
+        "no_condition_match": "Is it new, used, or a demo vehicle?",
+        "not_a_currency": "Could you give me a dollar amount — like 'a hundred and sixty thousand'?",
     }
 
     def _naturalize_clarification(
@@ -703,13 +743,13 @@ class InsuranceSession:
           1 → simpler phrasing + concrete example
           2+ → final-attempt warning, very explicit guidance
         """
-        raw_q   = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
+        raw_q = step["question"].replace("<Voice_Agent_Name>", AGENT_NAME)
         options = step.get("options") or []
-        hint    = self._CLARIFICATION_HINTS.get(error_reason, "The answer wasn't clear.")
+        hint = self._CLARIFICATION_HINTS.get(error_reason, "The answer wasn't clear.")
         opts_str = (
             f" Options are: {format_options_for_voice(options)}." if options else ""
         )
-        is_last = (attempt >= _MAX_FIELD_RETRIES - 1)
+        is_last = attempt >= _MAX_FIELD_RETRIES - 1
         if is_last:
             urgency = (
                 "This is the final attempt — if still unable to get a valid answer, "
@@ -724,7 +764,12 @@ class InsuranceSession:
             urgency = ""
         # Frame the problem correctly: range errors were understood but out of range;
         # format errors were genuinely unclear.
-        _RANGE_REASONS = {"date_in_past", "year_out_of_range", "below_minimum", "above_maximum"}
+        _RANGE_REASONS = {
+            "date_in_past",
+            "year_out_of_range",
+            "below_minimum",
+            "above_maximum",
+        }
         if error_reason in _RANGE_REASONS:
             framing = "the previous answer was understood but needs correcting"
         else:
@@ -757,16 +802,16 @@ class InsuranceSession:
         if step is None:
             return "Sorry, I didn't catch that — could you repeat?"
 
-        field_def  = STEP_FIELD_DEFS.get(self.current_step_id, {})
+        field_def = STEP_FIELD_DEFS.get(self.current_step_id, {})
         field_type = field_def.get("field_type", "free_text")
-        options    = step.get("options") or []
+        options = step.get("options") or []
 
         _HINTS: dict[str, str] = {
             "phone_number": "Sorry, I didn't catch that — you can say the number digit by digit.",
-            "date":         "Sorry, I didn't catch that — you can say it like 26 March 2026.",
-            "month_year":   "Sorry, I didn't catch that — just the month and year, like January 2010.",
-            "currency":     "Sorry, I didn't catch that — a dollar amount works, like one sixty thousand.",
-            "yes_no":       "Sorry, I didn't catch that — just a yes or no is fine.",
+            "date": "Sorry, I didn't catch that — you can say it like 26 March 2026.",
+            "month_year": "Sorry, I didn't catch that — just the month and year, like January 2010.",
+            "currency": "Sorry, I didn't catch that — a dollar amount works, like one sixty thousand.",
+            "yes_no": "Sorry, I didn't catch that — just a yes or no is fine.",
         }
 
         if field_type == "number":
@@ -806,8 +851,14 @@ class InsuranceSession:
         """Extract the first integer from a spoken answer."""
         # Handle words
         word_map = {
-            "one": 1, "two": 2, "three": 3, "four": 4,
-            "five": 5, "six": 6, "seven": 7, "eight": 8,
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
+            "six": 6,
+            "seven": 7,
+            "eight": 8,
         }
         t = text.lower().strip()
         for word, val in word_map.items():
@@ -815,4 +866,3 @@ class InsuranceSession:
                 return val
         m = re.search(r"\d+", t)
         return int(m.group()) if m else default
-

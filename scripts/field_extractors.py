@@ -76,61 +76,86 @@ STEP_FIELD_DEFS: dict[str, dict] = {
     # ── START ──────────────────────────────────────────────────────────────
     # Note: step 1.1 (consent) is handled entirely by _apply_branch in the
     # engine; no extraction needed here — it falls through to free_text.
-    "1.2":     {"field_name": "whatsapp_number",           "field_type": "phone_number"},
-    "1.3":     {"field_name": "policy_start_date",         "field_type": "date"},
-    "1.4":     {"field_name": "has_modifications",         "field_type": "yes_no"},
-    "1.4_desc":{"field_name": "modification_description",  "field_type": "free_text"},
-
+    "1.2": {"field_name": "whatsapp_number", "field_type": "phone_number"},
+    "1.3": {"field_name": "policy_start_date", "field_type": "date"},
+    "1.4": {"field_name": "has_modifications", "field_type": "yes_no"},
+    "1.4_desc": {"field_name": "modification_description", "field_type": "free_text"},
     # ── DRIVER ────────────────────────────────────────────────────────────
-    "2.1":  {"field_name": "driver_count",                 "field_type": "number",   "min_val": 1, "max_val": 10},
-    "2.2":  {"field_name": "is_registered_owner",          "field_type": "yes_no"},
-    "2.2a": {"field_name": "registered_owner_name",        "field_type": "free_text"},
-    "2.3":  {"field_name": "marital_status",               "field_type": "marital_status"},
-    "2.4":  {"field_name": "additional_driver_listed",     "field_type": "yes_no"},
-    "2.4a": {"field_name": "relationship_to_owner",        "field_type": "free_text"},
-    "2.5":  {"field_name": "is_primary_operator",          "field_type": "yes_no"},
-    "2.6":  {"field_name": "licence_issue_date",           "field_type": "month_year"},
-    "2.7":  {"field_name": "has_driver_training",          "field_type": "yes_no"},
-    "2.8":  {"field_name": "qualifies_for_retiree",        "field_type": "yes_no"},
-    "2.9":  {"field_name": "retiree_discount_confirmed",   "field_type": "yes_no"},
-
+    "2.1": {
+        "field_name": "driver_count",
+        "field_type": "number",
+        "min_val": 1,
+        "max_val": 10,
+    },
+    "2.2": {"field_name": "is_registered_owner", "field_type": "yes_no"},
+    "2.2a": {"field_name": "registered_owner_name", "field_type": "free_text"},
+    "2.3": {"field_name": "marital_status", "field_type": "marital_status"},
+    "2.4": {"field_name": "additional_driver_listed", "field_type": "yes_no"},
+    "2.4a": {"field_name": "relationship_to_owner", "field_type": "free_text"},
+    "2.5": {"field_name": "is_primary_operator", "field_type": "yes_no"},
+    "2.6": {"field_name": "licence_issue_date", "field_type": "month_year"},
+    "2.7": {"field_name": "has_driver_training", "field_type": "yes_no"},
+    "2.8": {"field_name": "qualifies_for_retiree", "field_type": "yes_no"},
+    "2.9": {"field_name": "retiree_discount_confirmed", "field_type": "yes_no"},
     # ── VEHICLE ───────────────────────────────────────────────────────────
-    "3.1":  {"field_name": "vehicle_count",                "field_type": "number",   "min_val": 1, "max_val": 10},
-    "3.3":  {"field_name": "principal_driver",             "field_type": "free_text"},
-    "3.4":  {"field_name": "ownership_type",               "field_type": "ownership_type"},
-    "3.5":  {"field_name": "finance_company",              "field_type": "free_text"},
-    "3.6":  {"field_name": "vehicle_year_make_model",      "field_type": "free_text"},
-    "3.7":  {"field_name": "vehicle_condition",            "field_type": "vehicle_condition"},
-    "3.8":  {"field_name": "purchase_price",               "field_type": "currency"},
-    "3.9":  {"field_name": "has_winter_tires",             "field_type": "yes_no"},
-    "3.10": {"field_name": "vehicle_loop_notes",           "field_type": "free_text"},
-
+    "3.1": {
+        "field_name": "vehicle_count",
+        "field_type": "number",
+        "min_val": 1,
+        "max_val": 10,
+    },
+    "3.3": {"field_name": "principal_driver", "field_type": "free_text"},
+    "3.4": {"field_name": "ownership_type", "field_type": "ownership_type"},
+    "3.5": {"field_name": "finance_company", "field_type": "free_text"},
+    "3.6": {"field_name": "vehicle_year_make_model", "field_type": "free_text"},
+    "3.7": {"field_name": "vehicle_condition", "field_type": "vehicle_condition"},
+    "3.8": {"field_name": "purchase_price", "field_type": "currency"},
+    "3.9": {"field_name": "has_winter_tires", "field_type": "yes_no"},
+    "3.10": {"field_name": "vehicle_loop_notes", "field_type": "free_text"},
     # ── USAGE ─────────────────────────────────────────────────────────────
-    "4.1":  {
-        "field_name":    "vehicle_usage",
-        "field_type":    "enum",
+    "4.1": {
+        "field_name": "vehicle_usage",
+        "field_type": "enum",
         "allowed_values": ["pleasure", "commuting", "business", "farm", "commercial"],
     },
-    "4.2":  {"field_name": "commute_days_per_week", "field_type": "number", "min_val": 0, "max_val": 7},
-    "4.3":  {"field_name": "one_way_km",            "field_type": "number", "min_val": 0, "max_val": 500},
-    "4.4":  {"field_name": "annual_mileage_km",     "field_type": "number", "min_val": 0, "max_val": 500_000},
-    "4.5":  {
-        "field_name":    "overnight_parking",
-        "field_type":    "enum",
-        "allowed_values": ["private driveway", "private garage", "condo or apartment garage", "underground parking", "street"],
+    "4.2": {
+        "field_name": "commute_days_per_week",
+        "field_type": "number",
+        "min_val": 0,
+        "max_val": 7,
     },
-
+    "4.3": {
+        "field_name": "one_way_km",
+        "field_type": "number",
+        "min_val": 0,
+        "max_val": 500,
+    },
+    "4.4": {
+        "field_name": "annual_mileage_km",
+        "field_type": "number",
+        "min_val": 0,
+        "max_val": 500_000,
+    },
+    "4.5": {
+        "field_name": "overnight_parking",
+        "field_type": "enum",
+        "allowed_values": [
+            "private driveway",
+            "private garage",
+            "condo or apartment garage",
+            "underground parking",
+            "street",
+        ],
+    },
     # ── RISK ──────────────────────────────────────────────────────────────
-    "5.1":  {"field_name": "has_cancellation_history",  "field_type": "yes_no"},
-    "5.2":  {"field_name": "has_claims_history",        "field_type": "yes_no"},
-    "5.3":  {"field_name": "has_licence_suspension",    "field_type": "yes_no"},
-    "5.4":  {"field_name": "risk_additional_notes",     "field_type": "free_text"},
-
+    "5.1": {"field_name": "has_cancellation_history", "field_type": "yes_no"},
+    "5.2": {"field_name": "has_claims_history", "field_type": "yes_no"},
+    "5.3": {"field_name": "has_licence_suspension", "field_type": "yes_no"},
+    "5.4": {"field_name": "risk_additional_notes", "field_type": "free_text"},
     # ── CONTACT ───────────────────────────────────────────────────────────
-    "6.1":  {"field_name": "contact_info",              "field_type": "free_text"},
-
+    "6.1": {"field_name": "contact_info", "field_type": "free_text"},
     # ── SUMMARY ───────────────────────────────────────────────────────────
-    "7.1":  {"field_name": "summary_confirmed",         "field_type": "yes_no"},
+    "7.1": {"field_name": "summary_confirmed", "field_type": "yes_no"},
 }
 
 
@@ -148,16 +173,22 @@ _QUALIFIERS_RE = re.compile(
 
 # Single spoken digit words → numeral character (used by phone extractor).
 _SPOKEN_DIGIT_MAP: dict[str, str] = {
-    "zero":  "0", "oh": "0", "o": "0",
-    "one":   "1",
-    "two":   "2", "to": "2", "too": "2",
+    "zero": "0",
+    "oh": "0",
+    "o": "0",
+    "one": "1",
+    "two": "2",
+    "to": "2",
+    "too": "2",
     "three": "3",
-    "four":  "4", "for": "4",
-    "five":  "5",
-    "six":   "6",
+    "four": "4",
+    "for": "4",
+    "five": "5",
+    "six": "6",
     "seven": "7",
-    "eight": "8", "ate": "8",
-    "nine":  "9",
+    "eight": "8",
+    "ate": "8",
+    "nine": "9",
 }
 
 # Filler words to strip before reassembling a phone number from spoken digits.
@@ -169,22 +200,56 @@ _PHONE_FILLER_RE = re.compile(
 
 # Word-to-number mapping — covers enough spoken forms for voice calls.
 _WORD_NUMS_EXT: dict[str, int] = {
-    "zero": 0,    "one": 1,      "two": 2,       "three": 3,    "four": 4,
-    "five": 5,    "six": 6,      "seven": 7,     "eight": 8,    "nine": 9,
-    "ten": 10,    "eleven": 11,  "twelve": 12,   "thirteen": 13,"fourteen": 14,
-    "fifteen": 15,"sixteen": 16, "seventeen": 17,"eighteen": 18,"nineteen": 19,
-    "twenty": 20, "thirty": 30,  "forty": 40,    "fifty": 50,
-    "sixty": 60,  "seventy": 70, "eighty": 80,   "ninety": 90,
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
     # STT homophones that sometimes appear
-    "won": 1, "to": 2, "too": 2, "for": 4, "ate": 8,
+    "won": 1,
+    "to": 2,
+    "too": 2,
+    "for": 4,
+    "ate": 8,
 }
 
 # Shorthand expressions that map directly to a count.
 _COUNT_SHORTHANDS: dict[str, int] = {
-    "just me":       1, "only me":       1, "just myself":   1, "only myself":  1,
-    "just one":      1, "only one":      1, "a single":      1,
-    "a couple":      2, "a pair":        2, "both":          2,
-    "a few":         3, "several":       4,
+    "just me": 1,
+    "only me": 1,
+    "just myself": 1,
+    "only myself": 1,
+    "just one": 1,
+    "only one": 1,
+    "a single": 1,
+    "a couple": 2,
+    "a pair": 2,
+    "both": 2,
+    "a few": 3,
+    "several": 4,
 }
 
 # Filler phrases to strip from phone input.
@@ -252,7 +317,7 @@ def _preprocess_phone_text(text: str) -> str:
 
 # Guard: utterances that are genuinely ambiguous — do NOT push them to yes/no.
 _YESNO_AMBIGUOUS_RE = re.compile(
-    r"\bnot?\s+sure\b"           # "not sure", "no sure"
+    r"\bnot?\s+sure\b"  # "not sure", "no sure"
     r"|\bmaybe\b"
     r"|\bperhaps\b"
     r"|\buncertain\b"
@@ -263,12 +328,12 @@ _YESNO_AMBIGUOUS_RE = re.compile(
 
 # Semantic negative markers: absence/negation of the subject matter.
 _YESNO_NEG_SEMANTIC_RE = re.compile(
-    r"\bnone\b"                  # "none"
-    r"|\bnothing\b"              # "nothing"
-    r"|\bnot\s+\w"               # "not modified", "not applicable"
-    r"|\bno\s+\w"                # "no modifications", "no changes"
-    r"|\bdon.?t\s+have\b"        # "don't have any"
-    r"|\bdoesn.?t\s+have\b"      # "doesn't have"
+    r"\bnone\b"  # "none"
+    r"|\bnothing\b"  # "nothing"
+    r"|\bnot\s+\w"  # "not modified", "not applicable"
+    r"|\bno\s+\w"  # "no modifications", "no changes"
+    r"|\bdon.?t\s+have\b"  # "don't have any"
+    r"|\bdoesn.?t\s+have\b"  # "doesn't have"
     r"|\bdo\s+not\s+have\b"
     r"|\bdid\s+not\s+have\b"
     r"|\bnever\s+had\b"
@@ -280,10 +345,10 @@ _YESNO_NEG_SEMANTIC_RE = re.compile(
 
 # Semantic affirmative markers: presence/confirmation of subject matter.
 _YESNO_AFF_SEMANTIC_RE = re.compile(
-    r"\bi\s+(?:do\s+)?have\b"           # "I have", "I do have"
+    r"\bi\s+(?:do\s+)?have\b"  # "I have", "I do have"
     r"|\bthere\s+(?:is|are|was|were)\b"  # "there is / there are"
-    r"|\bsome\b"                        # "some modifications"
-    r"|\bit\s+(?:is|was|has)\b",        # "it is modified"
+    r"|\bsome\b"  # "some modifications"
+    r"|\bit\s+(?:is|was|has)\b",  # "it is modified"
     re.IGNORECASE,
 )
 
@@ -301,11 +366,31 @@ def extract_yes_no(text: str) -> tuple[bool, str, str]:
         return True, "no", ""
     # Single-word fallbacks that intent helpers might miss.
     t = denoised.strip().lower()
-    if t in {"y", "yea", "ye", "ya", "k", "kk", "aye", "correct", "true",
-             "affirmative", "indeed", "roger"}:
+    if t in {
+        "y",
+        "yea",
+        "ye",
+        "ya",
+        "k",
+        "kk",
+        "aye",
+        "correct",
+        "true",
+        "affirmative",
+        "indeed",
+        "roger",
+    }:
         return True, "yes", ""
-    if t in {"n", "nay", "negative", "false", "incorrect", "never",
-             "not at all", "absolutely not"}:
+    if t in {
+        "n",
+        "nay",
+        "negative",
+        "false",
+        "incorrect",
+        "never",
+        "not at all",
+        "absolutely not",
+    }:
         return True, "no", ""
     # Guard: don't force ambiguous utterances into yes/no.
     if _YESNO_AMBIGUOUS_RE.search(denoised):
@@ -353,19 +438,45 @@ def extract_phone_number(text: str) -> tuple[bool, str, str]:
 
 # Month names and abbreviations for date parsing.
 _MONTH_FULL: dict[str, int] = {
-    "january": 1, "february": 2, "march": 3, "april": 4,
-    "may": 5, "june": 6, "july": 7, "august": 8,
-    "september": 9, "october": 10, "november": 11, "december": 12,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
 }
 _MONTH_ABBR: dict[str, int] = {k[:3]: v for k, v in _MONTH_FULL.items()}
 # STT commonly mishears month names:
 _MONTH_STT_FIXES: dict[str, str] = {
-    "jan": "january", "feb": "february", "mar": "march", "apr": "april",
-    "jun": "june", "jul": "july", "aug": "august", "sep": "september",
-    "sept": "september", "oct": "october", "nov": "november", "dec": "december",
-    "marchand": "march", "march the": "march", "april the": "april",
-    "2nd": "2", "3rd": "3", "4th": "4", "5th": "5", "6th": "6",
-    "7th": "7", "8th": "8", "9th": "9",
+    "jan": "january",
+    "feb": "february",
+    "mar": "march",
+    "apr": "april",
+    "jun": "june",
+    "jul": "july",
+    "aug": "august",
+    "sep": "september",
+    "sept": "september",
+    "oct": "october",
+    "nov": "november",
+    "dec": "december",
+    "marchand": "march",
+    "march the": "march",
+    "april the": "april",
+    "2nd": "2",
+    "3rd": "3",
+    "4th": "4",
+    "5th": "5",
+    "6th": "6",
+    "7th": "7",
+    "8th": "8",
+    "9th": "9",
 }
 # Ordinal suffix stripper: "26th" → "26", "1st" → "1"
 _ORDINAL_RE = re.compile(r"\b(\d+)(?:st|nd|rd|th)\b", re.IGNORECASE)
@@ -373,55 +484,55 @@ _ORDINAL_RE = re.compile(r"\b(\d+)(?:st|nd|rd|th)\b", re.IGNORECASE)
 # Ordinal word forms for day numbers 1–31 used in spoken dates.
 # Compound forms must appear before their simple components (longest match first).
 _ORDINAL_WORD_SUBS: list[tuple[re.Pattern, str]] = [
-    (re.compile(r"\btwenty[-\s]+first\b",   re.IGNORECASE), "21"),
-    (re.compile(r"\btwenty[-\s]+second\b",  re.IGNORECASE), "22"),
-    (re.compile(r"\btwenty[-\s]+third\b",   re.IGNORECASE), "23"),
-    (re.compile(r"\btwenty[-\s]+fourth\b",  re.IGNORECASE), "24"),
-    (re.compile(r"\btwenty[-\s]+fifth\b",   re.IGNORECASE), "25"),
-    (re.compile(r"\btwenty[-\s]+sixth\b",   re.IGNORECASE), "26"),
+    (re.compile(r"\btwenty[-\s]+first\b", re.IGNORECASE), "21"),
+    (re.compile(r"\btwenty[-\s]+second\b", re.IGNORECASE), "22"),
+    (re.compile(r"\btwenty[-\s]+third\b", re.IGNORECASE), "23"),
+    (re.compile(r"\btwenty[-\s]+fourth\b", re.IGNORECASE), "24"),
+    (re.compile(r"\btwenty[-\s]+fifth\b", re.IGNORECASE), "25"),
+    (re.compile(r"\btwenty[-\s]+sixth\b", re.IGNORECASE), "26"),
     (re.compile(r"\btwenty[-\s]+seventh\b", re.IGNORECASE), "27"),
-    (re.compile(r"\btwenty[-\s]+eighth\b",  re.IGNORECASE), "28"),
-    (re.compile(r"\btwenty[-\s]+ninth\b",   re.IGNORECASE), "29"),
-    (re.compile(r"\bthirty[-\s]+first\b",   re.IGNORECASE), "31"),
-    (re.compile(r"\bthirtieth\b",           re.IGNORECASE), "30"),
-    (re.compile(r"\btwentieth\b",           re.IGNORECASE), "20"),
-    (re.compile(r"\bnineteenth\b",          re.IGNORECASE), "19"),
-    (re.compile(r"\beighteenth\b",          re.IGNORECASE), "18"),
-    (re.compile(r"\bseventeenth\b",         re.IGNORECASE), "17"),
-    (re.compile(r"\bsixteenth\b",           re.IGNORECASE), "16"),
-    (re.compile(r"\bfifteenth\b",           re.IGNORECASE), "15"),
-    (re.compile(r"\bfourteenth\b",          re.IGNORECASE), "14"),
-    (re.compile(r"\bthirteenth\b",          re.IGNORECASE), "13"),
-    (re.compile(r"\btwelfth\b",             re.IGNORECASE), "12"),
-    (re.compile(r"\beleventh\b",            re.IGNORECASE), "11"),
-    (re.compile(r"\btenth\b",               re.IGNORECASE), "10"),
-    (re.compile(r"\bninth\b",               re.IGNORECASE),  "9"),
-    (re.compile(r"\beighth\b",              re.IGNORECASE),  "8"),
-    (re.compile(r"\bseventh\b",             re.IGNORECASE),  "7"),
-    (re.compile(r"\bsixth\b",               re.IGNORECASE),  "6"),
-    (re.compile(r"\bfifth\b",               re.IGNORECASE),  "5"),
-    (re.compile(r"\bfourth\b",              re.IGNORECASE),  "4"),
-    (re.compile(r"\bthird\b",               re.IGNORECASE),  "3"),
-    (re.compile(r"\bsecond\b",              re.IGNORECASE),  "2"),
-    (re.compile(r"\bfirst\b",               re.IGNORECASE),  "1"),
+    (re.compile(r"\btwenty[-\s]+eighth\b", re.IGNORECASE), "28"),
+    (re.compile(r"\btwenty[-\s]+ninth\b", re.IGNORECASE), "29"),
+    (re.compile(r"\bthirty[-\s]+first\b", re.IGNORECASE), "31"),
+    (re.compile(r"\bthirtieth\b", re.IGNORECASE), "30"),
+    (re.compile(r"\btwentieth\b", re.IGNORECASE), "20"),
+    (re.compile(r"\bnineteenth\b", re.IGNORECASE), "19"),
+    (re.compile(r"\beighteenth\b", re.IGNORECASE), "18"),
+    (re.compile(r"\bseventeenth\b", re.IGNORECASE), "17"),
+    (re.compile(r"\bsixteenth\b", re.IGNORECASE), "16"),
+    (re.compile(r"\bfifteenth\b", re.IGNORECASE), "15"),
+    (re.compile(r"\bfourteenth\b", re.IGNORECASE), "14"),
+    (re.compile(r"\bthirteenth\b", re.IGNORECASE), "13"),
+    (re.compile(r"\btwelfth\b", re.IGNORECASE), "12"),
+    (re.compile(r"\beleventh\b", re.IGNORECASE), "11"),
+    (re.compile(r"\btenth\b", re.IGNORECASE), "10"),
+    (re.compile(r"\bninth\b", re.IGNORECASE), "9"),
+    (re.compile(r"\beighth\b", re.IGNORECASE), "8"),
+    (re.compile(r"\bseventh\b", re.IGNORECASE), "7"),
+    (re.compile(r"\bsixth\b", re.IGNORECASE), "6"),
+    (re.compile(r"\bfifth\b", re.IGNORECASE), "5"),
+    (re.compile(r"\bfourth\b", re.IGNORECASE), "4"),
+    (re.compile(r"\bthird\b", re.IGNORECASE), "3"),
+    (re.compile(r"\bsecond\b", re.IGNORECASE), "2"),
+    (re.compile(r"\bfirst\b", re.IGNORECASE), "1"),
 ]
 
 
 def _normalise_date_text(text: str) -> str:
     """Pre-process spoken date text for parsing: strip ordinals, normalise separators."""
     t = text.lower().strip()
-    t = _ORDINAL_RE.sub(r"\1", t)                     # "26th" → "26"
-    for pat, sub in _ORDINAL_WORD_SUBS:               # "twenty-sixth" → "26"
+    t = _ORDINAL_RE.sub(r"\1", t)  # "26th" → "26"
+    for pat, sub in _ORDINAL_WORD_SUBS:  # "twenty-sixth" → "26"
         t = pat.sub(sub, t)
-    t = re.sub(r"\bof\b", " ", t)                     # "26th of March" → "26 March"
-    t = re.sub(r",", " ", t)                          # "March 26, 2026" → "March 26  2026"
-    t = re.sub(r"(?<=\d)\.(?=\d)", " ", t)            # "26.3.2027" → "26 3 2027"
-    t = re.sub(r"\s*/\s*", " ", t)                    # "26 / 3 / 2027" → "26 3 2027"
-    t = re.sub(r"(?<=\d)-(?=\d)", " ", t)             # "26-03-2027" → "26 03 2027"
+    t = re.sub(r"\bof\b", " ", t)  # "26th of March" → "26 March"
+    t = re.sub(r",", " ", t)  # "March 26, 2026" → "March 26  2026"
+    t = re.sub(r"(?<=\d)\.(?=\d)", " ", t)  # "26.3.2027" → "26 3 2027"
+    t = re.sub(r"\s*/\s*", " ", t)  # "26 / 3 / 2027" → "26 3 2027"
+    t = re.sub(r"(?<=\d)-(?=\d)", " ", t)  # "26-03-2027" → "26 03 2027"
     for wrong, fixed in _MONTH_STT_FIXES.items():
         t = re.sub(rf"\b{wrong}\b", fixed, t)
     t = re.sub(r"\s+", " ", t).strip()
-    t = re.sub(r"[.,;!?]+$", "", t).strip()              # drop trailing STT punctuation artefacts
+    t = re.sub(r"[.,;!?]+$", "", t).strip()  # drop trailing STT punctuation artefacts
     return t
 
 
@@ -513,14 +624,23 @@ def _expand_compound_word_nums(text: str) -> str:
     """
     t = text
     _ones: dict[str, int] = {
-        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-        "six": 6, "seven": 7, "eight": 8, "nine": 9,
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
     }
     # "twenty twenty <ones>" → 2021-2029  (longest pattern, checked first)
     for w, v in _ones.items():
         t = re.sub(
             rf"\btwenty[-\s]+twenty[-\s]+{w}\b",
-            str(2020 + v), t, flags=re.IGNORECASE,
+            str(2020 + v),
+            t,
+            flags=re.IGNORECASE,
         )
     # "twenty twenty" → 2020
     t = re.sub(r"\btwenty[-\s]+twenty\b", "2020", t, flags=re.IGNORECASE)
@@ -530,7 +650,9 @@ def _expand_compound_word_nums(text: str) -> str:
     for w, v in _ones.items():
         t = re.sub(
             rf"\btwenty[-\s]+{w}\b",
-            str(20 + v), t, flags=re.IGNORECASE,
+            str(20 + v),
+            t,
+            flags=re.IGNORECASE,
         )
     # "thirty one" → 31
     t = re.sub(r"\bthirty[-\s]+one\b", "31", t, flags=re.IGNORECASE)
@@ -539,7 +661,8 @@ def _expand_compound_word_nums(text: str) -> str:
     t = re.sub(
         r"\btwo\s+thousand\s+(?:and\s+)?(\d{1,2})\b",
         lambda m: str(2000 + int(m.group(1))),
-        t, flags=re.IGNORECASE,
+        t,
+        flags=re.IGNORECASE,
     )
     # "two thousand" alone → 2000
     t = re.sub(r"\btwo\s+thousand\b", "2000", t, flags=re.IGNORECASE)
@@ -624,8 +747,11 @@ def extract_date(text: str) -> tuple[bool, str, str]:
 
 # STT fixes for common month-name mishearings in licence date context.
 _LICENCE_DATE_STT: dict[str, str] = {
-    "to": "2", "too": "2", "for": "4",
-    "won": "1", "ate": "8",
+    "to": "2",
+    "too": "2",
+    "for": "4",
+    "won": "1",
+    "ate": "8",
 }
 
 
@@ -661,9 +787,11 @@ def extract_month_year(text: str) -> tuple[bool, str, str]:
     # "twenty <digit_word>" → "20XX"
     t = re.sub(
         r"\btwenty[-\s]+(\w+)\b",
-        lambda m: str(2020 + (_WORD_NUMS_EXT.get(m.group(1).lower(), 0) - 20))
-        if _WORD_NUMS_EXT.get(m.group(1).lower(), 100) < 10
-        else m.group(0),
+        lambda m: (
+            str(2020 + (_WORD_NUMS_EXT.get(m.group(1).lower(), 0) - 20))
+            if _WORD_NUMS_EXT.get(m.group(1).lower(), 100) < 10
+            else m.group(0)
+        ),
         t,
     )
     # Compound year forms not caught above: "twenty-twenty-seven" → 2027, etc.
@@ -761,9 +889,16 @@ def extract_currency(text: str) -> tuple[bool, int, str]:
         t = re.sub(rf"\b{word}\b", str(num), t)
 
     # Also handle "a hundred" → "100"
-    t = re.sub(r"\ba\b\s*(hundred|thousand|lakh|lac)\b",
-               lambda m: {"hundred": "100", "thousand": "1000",
-                          "lakh": "100000", "lac": "100000"}[m.group(1)], t)
+    t = re.sub(
+        r"\ba\b\s*(hundred|thousand|lakh|lac)\b",
+        lambda m: {
+            "hundred": "100",
+            "thousand": "1000",
+            "lakh": "100000",
+            "lac": "100000",
+        }[m.group(1)],
+        t,
+    )
 
     # Remove all commas.
     t = t.replace(",", "")
@@ -776,9 +911,9 @@ def extract_currency(text: str) -> tuple[bool, int, str]:
         t,
     )
     if m:
-        lakhs     = float(m.group(1)) * 100_000
+        lakhs = float(m.group(1)) * 100_000
         thousands = float(m.group(2)) * 1_000 if m.group(2) else 0.0
-        units     = float(m.group(3)) if m.group(3) else 0.0
+        units = float(m.group(3)) if m.group(3) else 0.0
         total = int(lakhs + thousands + units)
         if total > 0:
             return True, total, ""
@@ -838,46 +973,84 @@ def extract_currency(text: str) -> tuple[bool, int, str]:
 _MARITAL_MAP: list[tuple[tuple[str, ...], str]] = [
     (
         (
-            "single", "unmarried", "not married", "never married",
-            "on my own", "by myself", "no partner", "unattached",
-            "bachelor", "bachelorette", "solo",
+            "single",
+            "unmarried",
+            "not married",
+            "never married",
+            "on my own",
+            "by myself",
+            "no partner",
+            "unattached",
+            "bachelor",
+            "bachelorette",
+            "solo",
         ),
         "single",
     ),
     (
         (
-            "common law", "common-law", "commonlaw",
-            "living together", "living with", "live together",
-            "live with my", "cohabit", "co-habit",
-            "common-law partner", "common law partner",
-            "together but not married", "not married but together",
-            "like married", "practically married",
+            "common law",
+            "common-law",
+            "commonlaw",
+            "living together",
+            "living with",
+            "live together",
+            "live with my",
+            "cohabit",
+            "co-habit",
+            "common-law partner",
+            "common law partner",
+            "together but not married",
+            "not married but together",
+            "like married",
+            "practically married",
         ),
         "common_law",
     ),
     (
         (
-            "divorced", "separated", "separation",
-            "ex-wife", "ex-husband", "ex wife", "ex husband",
-            "split up", "split from", "no longer married",
-            "used to be married", "was married",
+            "divorced",
+            "separated",
+            "separation",
+            "ex-wife",
+            "ex-husband",
+            "ex wife",
+            "ex husband",
+            "split up",
+            "split from",
+            "no longer married",
+            "used to be married",
+            "was married",
         ),
         "divorced",
     ),
     (
         (
-            "widowed", "widow", "widower",
-            "my spouse passed", "my husband passed", "my wife passed",
-            "lost my spouse", "lost my husband", "lost my wife",
+            "widowed",
+            "widow",
+            "widower",
+            "my spouse passed",
+            "my husband passed",
+            "my wife passed",
+            "lost my spouse",
+            "lost my husband",
+            "lost my wife",
         ),
         "widowed",
     ),
     (
         # Checked last — "married" is a substring of several divorced/common-law phrases.
         (
-            "married", "spouse", "husband", "wife", "wed",
-            "legally married", "got married", "been married",
-            "my wife", "my husband",
+            "married",
+            "spouse",
+            "husband",
+            "wife",
+            "wed",
+            "legally married",
+            "got married",
+            "been married",
+            "my wife",
+            "my husband",
         ),
         "married",
     ),
@@ -901,26 +1074,59 @@ def extract_marital_status(text: str) -> tuple[bool, str, str]:
 _OWNERSHIP_MAP: list[tuple[tuple[str, ...], str]] = [
     (
         (
-            "lease", "leasing", "renting", "on a lease", "under a lease",
-            "lease agreement", "leased vehicle", "i lease",
+            "lease",
+            "leasing",
+            "renting",
+            "on a lease",
+            "under a lease",
+            "lease agreement",
+            "leased vehicle",
+            "i lease",
         ),
         "leased",
     ),
     (
         (
-            "financ", "loan", "paying it off", "still paying", "making payments",
-            "monthly payments", "bank loan", "credit union", "auto loan",
-            "car loan", "i owe", "owe money", "not paid off",
-            "not fully paid", "got a loan", "have a loan",
+            "financ",
+            "loan",
+            "paying it off",
+            "still paying",
+            "making payments",
+            "monthly payments",
+            "bank loan",
+            "credit union",
+            "auto loan",
+            "car loan",
+            "i owe",
+            "owe money",
+            "not paid off",
+            "not fully paid",
+            "got a loan",
+            "have a loan",
         ),
         "financed",
     ),
     (
         (
-            "own it", "own the", "owned", "outright", "paid off", "paid it off",
-            "fully paid", "no loan", "no payments", "free and clear",
-            "it's mine", "its mine", "bought it cash", "cash purchase",
-            "no finance", "no financing", "cleared", "lien free", "lien-free",
+            "own it",
+            "own the",
+            "owned",
+            "outright",
+            "paid off",
+            "paid it off",
+            "fully paid",
+            "no loan",
+            "no payments",
+            "free and clear",
+            "it's mine",
+            "its mine",
+            "bought it cash",
+            "cash purchase",
+            "no finance",
+            "no financing",
+            "cleared",
+            "lien free",
+            "lien-free",
         ),
         "owned",
     ),
@@ -945,27 +1151,56 @@ def extract_ownership_type(text: str) -> tuple[bool, str, str]:
 _CONDITION_MAP: list[tuple[tuple[str, ...], str]] = [
     (
         (
-            "demo", "demonstration", "demo vehicle", "demo model",
-            "floor model", "dealer demo", "show model", "display model",
+            "demo",
+            "demonstration",
+            "demo vehicle",
+            "demo model",
+            "floor model",
+            "dealer demo",
+            "show model",
+            "display model",
         ),
         "demo",
     ),
     (
         (
-            "used", "second hand", "secondhand", "second-hand",
-            "pre-owned", "preowned", "pre owned", "pre-owned",
-            "older", "previously owned", "not new", "old car",
-            "a few years old", "few years", "couple years old",
-            "high mileage", "it's old", "pretty old",
+            "used",
+            "second hand",
+            "secondhand",
+            "second-hand",
+            "pre-owned",
+            "preowned",
+            "pre owned",
+            "pre-owned",
+            "older",
+            "previously owned",
+            "not new",
+            "old car",
+            "a few years old",
+            "few years",
+            "couple years old",
+            "high mileage",
+            "it's old",
+            "pretty old",
         ),
         "used",
     ),
     (
         (
-            "brand new", "brand-new", "factory new",
-            "never driven", "0 km", "zero km", "zero kilometers", "zero kilometres",
-            "just bought new", "just got it new", "fresh off the lot",
-            "off the lot", "straight from the dealer", "new from the dealer",
+            "brand new",
+            "brand-new",
+            "factory new",
+            "never driven",
+            "0 km",
+            "zero km",
+            "zero kilometers",
+            "zero kilometres",
+            "just bought new",
+            "just got it new",
+            "fresh off the lot",
+            "off the lot",
+            "straight from the dealer",
+            "new from the dealer",
         ),
         "new",
     ),
@@ -995,57 +1230,53 @@ def extract_vehicle_condition(text: str) -> tuple[bool, str, str]:
 # Checked longest-phrase-first inside extract_enum.
 _ENUM_ALIASES: dict[str, str] = {
     # ── business
-    "for work":               "business",
-    "work use":               "business",
-    "work purposes":          "business",
-    "business use":           "business",
-    "for business":           "business",
-    "business purposes":      "business",
-    "company car":            "business",
-    "work car":               "business",
-    "going to work":          "business",
-
+    "for work": "business",
+    "work use": "business",
+    "work purposes": "business",
+    "business use": "business",
+    "for business": "business",
+    "business purposes": "business",
+    "company car": "business",
+    "work car": "business",
+    "going to work": "business",
     # ── commercial
-    "commercial purpose":     "commercial",
-    "for hire":               "commercial",
-    "taxi":                   "commercial",
-    "delivery":               "commercial",
-    "rideshare":              "commercial",
-    "uber":                   "commercial",
-    "lyft":                   "commercial",
-    "drive for hire":         "commercial",
-    "transport people":       "commercial",
-
+    "commercial purpose": "commercial",
+    "for hire": "commercial",
+    "taxi": "commercial",
+    "delivery": "commercial",
+    "rideshare": "commercial",
+    "uber": "commercial",
+    "lyft": "commercial",
+    "drive for hire": "commercial",
+    "transport people": "commercial",
     # ── commuting
-    "commute":                "commuting",
-    "daily driver":           "commuting",
-    "back and forth":         "commuting",
-    "to and from work":       "commuting",
-    "to work and back":       "commuting",
-    "every day to work":      "commuting",
-    "drive to work":          "commuting",
-    "daily commute":          "commuting",
-
+    "commute": "commuting",
+    "daily driver": "commuting",
+    "back and forth": "commuting",
+    "to and from work": "commuting",
+    "to work and back": "commuting",
+    "every day to work": "commuting",
+    "drive to work": "commuting",
+    "daily commute": "commuting",
     # ── pleasure
-    "personal use":           "pleasure",
-    "personal":               "pleasure",
-    "leisure":                "pleasure",
-    "weekend":                "pleasure",
-    "recreational":           "pleasure",
-    "just driving around":    "pleasure",
-    "for fun":                "pleasure",
-    "pleasure driving":       "pleasure",
-    "joy rides":              "pleasure",
-    "casual":                 "pleasure",
-    "occasional use":         "pleasure",
-    "here and there":         "pleasure",
-
+    "personal use": "pleasure",
+    "personal": "pleasure",
+    "leisure": "pleasure",
+    "weekend": "pleasure",
+    "recreational": "pleasure",
+    "just driving around": "pleasure",
+    "for fun": "pleasure",
+    "pleasure driving": "pleasure",
+    "joy rides": "pleasure",
+    "casual": "pleasure",
+    "occasional use": "pleasure",
+    "here and there": "pleasure",
     # ── farm
-    "farm use":               "farm",
-    "farming":                "farm",
-    "agricultural":           "farm",
-    "on the farm":            "farm",
-    "farm work":              "farm",
+    "farm use": "farm",
+    "farming": "farm",
+    "agricultural": "farm",
+    "on the farm": "farm",
+    "farm work": "farm",
 }
 
 
@@ -1188,6 +1419,7 @@ def classify_intent(text: str) -> str:
 # ---------------------------------------------------------------------------
 # Main router — called by the flow engine
 # ---------------------------------------------------------------------------
+
 
 def extract_structured_answer(
     step_id: str,
@@ -1340,8 +1572,10 @@ def build_retry_prompt(
     """
     variants = _RETRY_VARIANTS.get(
         error_reason,
-        ["Sorry — I didn't quite get that. Could you try again?",
-         "Could you try that again?"],
+        [
+            "Sorry — I didn't quite get that. Could you try again?",
+            "Could you try that again?",
+        ],
     )
 
     key = (step_id, error_reason)

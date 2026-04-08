@@ -15,9 +15,22 @@ load_dotenv(dotenv_path=env_path)
 
 print("OpenAI key loaded:", bool(os.getenv("OPENAI_API_KEY")))
 
-import os, ssl, sys, io, wave, tempfile, base64, asyncio
-import threading, queue, json as _json, traceback, re, time, subprocess
+import os
+import ssl
+import io
+import wave
+import tempfile
+import base64
+import asyncio
+import threading
+import queue
+import json as _json
+import traceback
+import re
+import time
+import subprocess
 from dotenv import load_dotenv
+
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 import numpy as np
@@ -63,24 +76,25 @@ _tts_cp = None
 _tts_voice_path = None
 _tts_cond = None
 
+
 def dlog(*args):
     if DEBUG:
         print(*args)
+
 
 # ======================================================================
 # STT BACKEND — choose ONE block below and comment out the other
 # ======================================================================
 
 # ── Option A: faster-whisper (current, default) ───────────────────────
-USE_KYUTAI_STT = False   # set True to switch to Kyutai
+USE_KYUTAI_STT = False  # set True to switch to Kyutai
 
 if not USE_KYUTAI_STT:
     print("Loading STT (Whisper base)...")
     from faster_whisper import WhisperModel
+
     stt_model = WhisperModel(
-        "base",
-        device=DEVICE,
-        compute_type="float16" if DEVICE == "cuda" else "int8"
+        "base", device=DEVICE, compute_type="float16" if DEVICE == "cuda" else "int8"
     )
     print("STT ready.")
 
@@ -109,7 +123,7 @@ if not USE_KYUTAI_STT:
 # ======================================================================
 
 # ── Option A: Kokoro ONNX (current, default) ──────────────────────────
-USE_KYUTAI_TTS = False   # set True to switch to Kyutai
+USE_KYUTAI_TTS = False  # set True to switch to Kyutai
 
 if not USE_KYUTAI_TTS:
     print("Loading TTS (Kokoro)...")
@@ -119,7 +133,9 @@ if not USE_KYUTAI_TTS:
 
     _cache = Path.home() / ".cache" / "kokoro_onnx"
     _cache.mkdir(parents=True, exist_ok=True)
-    _BASE_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+    _BASE_URL = (
+        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+    )
 
     def _ensure(filename: str) -> str:
         dest = _cache / filename
@@ -128,15 +144,17 @@ if not USE_KYUTAI_TTS:
             urllib.request.urlretrieve(f"{_BASE_URL}/{filename}", str(dest))
         return str(dest)
 
-    tts_model  = Kokoro(_ensure("kokoro-v1.0.onnx"), _ensure("voices-v1.0.bin"))
+    tts_model = Kokoro(_ensure("kokoro-v1.0.onnx"), _ensure("voices-v1.0.bin"))
     print("TTS ready.")
 
     # Load the active voice profile (driven by VOICE_PROFILE env var, default: kokoro_heart)
     from voice_profiles import get_active_voice_profile
+
     _voice_profile = get_active_voice_profile()
     print(f"Voice profile: {_voice_profile.display_name}")
 
     try:
+
         async def _warmup():
             async for _ in tts_model.create_stream(
                 "Hello.",
@@ -145,6 +163,7 @@ if not USE_KYUTAI_TTS:
                 lang=_voice_profile.language,
             ):
                 break
+
         asyncio.run(_warmup())
         print("TTS warmed up.")
     except Exception:
@@ -175,7 +194,7 @@ if not USE_KYUTAI_TTS:
 # ======================================================================
 
 from openai.types.chat import ChatCompletionMessageParam
-from openai_brain import get_brain        # model, pricing, logging all in one place
+from openai_brain import get_brain  # model, pricing, logging all in one place
 
 # ======================================================================
 # Insurance flow engine
@@ -190,14 +209,15 @@ current_session: "InsuranceSession | None" = None
 # ======================================================================
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
-_MD_RE    = re.compile(r"[*#`]+")
-_ITEM_RE  = re.compile(r"^\s*[A-Ca-c\d][.):]\s*", re.MULTILINE)
+_MD_RE = re.compile(r"[*#`]+")
+_ITEM_RE = re.compile(r"^\s*[A-Ca-c\d][.):]\s*", re.MULTILINE)
 MULTISPACE_RE = re.compile(r"\s+")
 
 # STT cleanup replacements — add insurance-specific mishearings here
 STT_REPLACEMENTS: dict[str, str] = {
     # e.g. "teen" → "13" (handle common number mishears if found in testing)
 }
+
 
 def _clean_llm(text: str) -> str:
     text = _THINK_RE.sub("", text)
@@ -221,7 +241,9 @@ def preprocess_transcript(text: str) -> str:
     low = cleaned.lower()
     for wrong, fixed in STT_REPLACEMENTS.items():
         if wrong in low:
-            cleaned = re.sub(rf"\b{re.escape(wrong)}\b", fixed, cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(
+                rf"\b{re.escape(wrong)}\b", fixed, cleaned, flags=re.IGNORECASE
+            )
     return cleaned.strip()
 
 
@@ -238,11 +260,11 @@ conversation: list[ChatCompletionMessageParam] = []
 from flask import Flask, render_template_string
 from flask_sock import Sock
 
-app  = Flask(__name__)
+app = Flask(__name__)
 sock = Sock(app)
 
 audio_queue = queue.Queue()
-msg_queue   = queue.Queue()
+msg_queue = queue.Queue()
 
 # HTML kept same as your current version
 HTML = """<!DOCTYPE html>
@@ -440,6 +462,7 @@ function stopCapture() {
 # WebSocket route
 # ======================================================================
 
+
 @app.route("/")
 def index():
     return render_template_string(HTML)
@@ -526,11 +549,12 @@ def get_audio():
 
         if sr != 16000:
             import librosa
+
             audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
 
     except Exception as e:
         print(f"[PyAV failed ({e}), falling back to ffmpeg]")
-        tmp_in  = os.path.join(tempfile.gettempdir(), "va_in.webm")
+        tmp_in = os.path.join(tempfile.gettempdir(), "va_in.webm")
         tmp_out = os.path.join(tempfile.gettempdir(), "va_in.wav")
 
         with open(tmp_in, "wb") as f:
@@ -538,19 +562,21 @@ def get_audio():
 
         r = subprocess.run(
             ["ffmpeg", "-y", "-i", tmp_in, "-ar", "16000", "-ac", "1", tmp_out],
-            capture_output=True
+            capture_output=True,
         )
 
         if r.returncode != 0:
             raise RuntimeError(f"ffmpeg: {r.stderr.decode()[-300:]}")
 
         with wave.open(tmp_out, "rb") as wf:
-            audio = np.frombuffer(
-                wf.readframes(wf.getnframes()),
-                np.int16
-            ).astype(np.float32) / 32768.0
+            audio = (
+                np.frombuffer(wf.readframes(wf.getnframes()), np.int16).astype(
+                    np.float32
+                )
+                / 32768.0
+            )
 
-    dlog(f"[Audio: {len(audio)/16000:.2f}s]")
+    dlog(f"[Audio: {len(audio) / 16000:.2f}s]")
     return audio
 
 
@@ -568,29 +594,23 @@ _STT_INSURANCE_PROMPT = (
     # Domain context — tunes the language model prior
     "This is a phone call for an insurance intake. "
     "The agent is collecting information for a vehicle insurance quote. "
-
     # Structured answer types the caller is likely to say
     "The caller may say: yes, no, correct, that's right, I don't have any. "
-
     # Insurance-specific vocabulary
     "Common words: policy, coverage, insurance, broker, quote, premium, deductible, "
     "liability, collision, comprehensive, endorsement, certificate, household, "
     "registered owner, principal driver, licensed driver, marital status, "
     "single, married, common law, divorced, widowed, "
     "vehicle, financed, leased, owned, winter tires, modification, modifications. "
-
     # Phone numbers spoken digit by digit
     "Phone numbers: four one six five five five zero one nine nine, "
     "nine zero five two two two three three three three. "
-
     # Dates and years spoken aloud
     "Dates: March twenty-sixth twenty twenty-seven, January two thousand ten, "
     "twenty-sixth of March, April first twenty twenty-six. "
-
     # Numbers, counts, amounts
     "Numbers: one driver, two vehicles, three, four. "
     "Amounts: one hundred sixty thousand, two hundred thousand, fifty thousand. "
-
     # WhatsApp / contact
     "Contact: WhatsApp number, cell number, mobile number."
 )
@@ -598,6 +618,7 @@ _STT_INSURANCE_PROMPT = (
 
 # Transcribe — faster-whisper (Option A) or Kyutai (Option B)
 # ======================================================================
+
 
 def transcribe(audio: np.ndarray) -> str:
     if len(audio) < 16000:
@@ -620,14 +641,18 @@ def transcribe(audio: np.ndarray) -> str:
             vad_filter=True,
             initial_prompt=_STT_INSURANCE_PROMPT,
         )
-        parts = [s.text.strip() for s in segs if getattr(s, "no_speech_prob", 0.0) < 0.6]
+        parts = [
+            s.text.strip() for s in segs if getattr(s, "no_speech_prob", 0.0) < 0.6
+        ]
         text = " ".join(parts).strip()
-        dlog(f"[STT {time.time()-t0:.2f}s lang={info.language}: {repr(text)}]")
+        dlog(f"[STT {time.time() - t0:.2f}s lang={info.language}: {repr(text)}]")
         return text
 
     else:
         # Kyutai STT path (kept for compatibility)
-        import math, itertools
+        import math
+        import itertools
+
         t0 = time.time()
 
         audio_t = torch.from_numpy(audio).to(DEVICE).unsqueeze(0)
@@ -643,7 +668,9 @@ def transcribe(audio: np.ndarray) -> str:
 
         n_prefix = math.ceil(_kyutai_prefix * _kyutai_mimi.frame_rate)
         n_suffix = math.ceil(_kyutai_delay * _kyutai_mimi.frame_rate)
-        silence = torch.zeros((1, 1, _kyutai_mimi.frame_size), dtype=torch.float32, device=DEVICE)
+        silence = torch.zeros(
+            (1, 1, _kyutai_mimi.frame_size), dtype=torch.float32, device=DEVICE
+        )
 
         chunks = itertools.chain(
             itertools.repeat(silence, n_prefix),
@@ -662,7 +689,7 @@ def transcribe(audio: np.ndarray) -> str:
         all_tok = torch.concat(tok_acc, dim=-1).cpu().view(-1)
         all_tok = all_tok[all_tok > _kyutai_pad_id]
         text = _kyutai_tok.decode(all_tok.numpy().tolist())
-        dlog(f"[Kyutai STT {time.time()-t0:.2f}s: {repr(text)}]")
+        dlog(f"[Kyutai STT {time.time() - t0:.2f}s: {repr(text)}]")
         return text.strip()
 
 
@@ -670,11 +697,13 @@ def transcribe(audio: np.ndarray) -> str:
 # TTS stream — Kokoro (Option A) or Kyutai (Option B)
 # ======================================================================
 
+
 def tts_stream(text: str) -> None:
     if not text.strip():
         return
 
     if not USE_KYUTAI_TTS:
+
         async def _run():
             t0, n = time.time(), 0
             async for samples, sr in tts_model.create_stream(
@@ -691,15 +720,21 @@ def tts_stream(text: str) -> None:
                     wf.setnchannels(1)
                     wf.setsampwidth(2)
                     wf.setframerate(sr)
-                    wf.writeframes((np.clip(samples, -1, 1) * 32767).astype(np.int16).tobytes())
+                    wf.writeframes(
+                        (np.clip(samples, -1, 1) * 32767).astype(np.int16).tobytes()
+                    )
 
-                msg_queue.put(_json.dumps({
-                    "type": "audio",
-                    "audio": base64.b64encode(buf.getvalue()).decode()
-                }))
+                msg_queue.put(
+                    _json.dumps(
+                        {
+                            "type": "audio",
+                            "audio": base64.b64encode(buf.getvalue()).decode(),
+                        }
+                    )
+                )
                 n += 1
 
-            dlog(f'[TTS {time.time()-t0:.2f}s  {n} chunks  "{text[:40]}"]')
+            dlog(f'[TTS {time.time() - t0:.2f}s  {n} chunks  "{text[:40]}"]')
 
         try:
             asyncio.run(_run())
@@ -707,7 +742,6 @@ def tts_stream(text: str) -> None:
             traceback.print_exc()
 
     else:
-        from moshi.models.tts import script_to_entries
         t0 = time.time()
         pcms = []
 
@@ -732,14 +766,20 @@ def tts_stream(text: str) -> None:
                 wf.setnchannels(1)
                 wf.setsampwidth(2)
                 wf.setframerate(sr)
-                wf.writeframes((np.clip(chunk, -1, 1) * 32767).astype(np.int16).tobytes())
+                wf.writeframes(
+                    (np.clip(chunk, -1, 1) * 32767).astype(np.int16).tobytes()
+                )
 
-            msg_queue.put(_json.dumps({
-                "type": "audio",
-                "audio": base64.b64encode(buf.getvalue()).decode()
-            }))
+            msg_queue.put(
+                _json.dumps(
+                    {
+                        "type": "audio",
+                        "audio": base64.b64encode(buf.getvalue()).decode(),
+                    }
+                )
+            )
 
-        dlog(f'[Kyutai TTS {time.time()-t0:.2f}s  "{text[:40]}"]')
+        dlog(f'[Kyutai TTS {time.time() - t0:.2f}s  "{text[:40]}"]')
 
 
 # ======================================================================
@@ -747,6 +787,7 @@ def tts_stream(text: str) -> None:
 # ======================================================================
 
 import re
+
 
 def chunk_reply(text, first_chunk_chars=70, later_chunk_chars=130):
     """
@@ -761,7 +802,7 @@ def chunk_reply(text, first_chunk_chars=70, later_chunk_chars=130):
         return []
 
     # Split by sentence boundaries
-    parts = re.split(r'(?<=[.!?])\s+|(?<=:)\s+|(?<=;)\s+', text)
+    parts = re.split(r"(?<=[.!?])\s+|(?<=:)\s+|(?<=;)\s+", text)
     parts = [p.strip() for p in parts if p.strip()]
 
     chunks = []
@@ -772,7 +813,7 @@ def chunk_reply(text, first_chunk_chars=70, later_chunk_chars=130):
         # If a sentence is too long, split by commas
         subparts = [part]
         if len(part) > later_chunk_chars:
-            subparts = re.split(r'(?<=,)\s+', part)
+            subparts = re.split(r"(?<=,)\s+", part)
             subparts = [s.strip() for s in subparts if s.strip()]
 
         for sub in subparts:
@@ -798,6 +839,7 @@ def chunk_reply(text, first_chunk_chars=70, later_chunk_chars=130):
             merged.append(chunk)
 
     return merged
+
 
 SENT_RE = re.compile(r"(?<=[.!?])\s+")
 
@@ -830,14 +872,14 @@ def pipeline_loop():
             text = transcribe(audio)
 
             if not text or not text.strip():
-                msg_queue.put(_json.dumps({
-                    "type": "status",
-                    "text": "Didn't catch that — try again."
-                }))
+                msg_queue.put(
+                    _json.dumps(
+                        {"type": "status", "text": "Didn't catch that — try again."}
+                    )
+                )
                 msg_queue.put(_json.dumps({"type": "audio_end"}))
                 msg_queue.put("DONE")
                 continue
-    
 
             cleaned_text = preprocess_transcript(text)
 
@@ -846,10 +888,12 @@ def pipeline_loop():
             dlog(f"You (cleaned):  {cleaned_text}")
             if current_session:
                 snap = current_session.get_state_summary()
-                dlog(f"State before:   step={snap['current_step']} | "
-                     f"drivers={snap['driver_count']} | "
-                     f"vehicles={snap['vehicle_count']} | "
-                     f"answers={snap['answers_collected']}")
+                dlog(
+                    f"State before:   step={snap['current_step']} | "
+                    f"drivers={snap['driver_count']} | "
+                    f"vehicles={snap['vehicle_count']} | "
+                    f"answers={snap['answers_collected']}"
+                )
 
             msg_queue.put(_json.dumps({"type": "you", "text": cleaned_text}))
 
@@ -866,13 +910,17 @@ def pipeline_loop():
             dlog(f"Agent reply:    {full_reply[:80]}")
             if current_session:
                 snap = current_session.get_state_summary()
-                dlog(f"State after:    step={snap['current_step']} | "
-                     f"answers={snap['answers_collected']} | "
-                     f"ended={snap['ended']}")
+                dlog(
+                    f"State after:    step={snap['current_step']} | "
+                    f"answers={snap['answers_collected']} | "
+                    f"ended={snap['ended']}"
+                )
             dlog("=" * 72)
 
             # Stream sentence by sentence
-            for chunk in chunk_reply(full_reply, first_chunk_chars=70, later_chunk_chars=130):
+            for chunk in chunk_reply(
+                full_reply, first_chunk_chars=70, later_chunk_chars=130
+            ):
                 msg_queue.put(_json.dumps({"type": "ai", "text": chunk}))
                 tts_stream(chunk)
 
@@ -887,16 +935,16 @@ def pipeline_loop():
 
         except Exception:
             traceback.print_exc()
-            msg_queue.put(_json.dumps({
-                "type": "status",
-                "text": "Error — please try again."
-            }))
+            msg_queue.put(
+                _json.dumps({"type": "status", "text": "Error — please try again."})
+            )
             msg_queue.put(_json.dumps({"type": "audio_end"}))
             msg_queue.put("DONE")
 
 
 if __name__ == "__main__":
     import logging
+
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
     threading.Thread(target=pipeline_loop, daemon=True).start()

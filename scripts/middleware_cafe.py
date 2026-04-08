@@ -1,9 +1,8 @@
-﻿import json
+import json
 import os
 import re
 from difflib import SequenceMatcher
 
-from torch import norm
 
 # =========================================================
 # MENU LOADING
@@ -25,15 +24,15 @@ for row in _raw:
     if not cat or not sub or not item:
         continue
 
-    MENU.setdefault(cat, {}).setdefault(sub, {}).setdefault(item, []).append({
-        "size": size,
-        "price": price
-    })
+    MENU.setdefault(cat, {}).setdefault(sub, {}).setdefault(item, []).append(
+        {"size": size, "price": price}
+    )
 
 
 # =========================================================
 # GLOBAL STATE
 # =========================================================
+
 
 def reset_state():
     return {
@@ -55,6 +54,7 @@ def reset_state():
         "turn_count": 0,
     }
 
+
 state = reset_state()
 
 greeting = "Hello, this is Alex at Crumbs and Cream. How can I help you today?"
@@ -64,6 +64,7 @@ greeting = "Hello, this is Alex at Crumbs and Cream. How can I help you today?"
 # SYSTEM PROMPT EXPORT
 # =========================================================
 
+
 def build_system_prompt():
     return _build_system_prompt()
 
@@ -72,36 +73,49 @@ def build_system_prompt():
 # NORMALIZATION / HELPERS
 # =========================================================
 
+
 def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip().lower())
 
 
 def _strip_correction_prefixes(text: str) -> str:
     prefixes = [
-        "no ", "no, ", "actually ", "actually, ", "sorry ", "sorry, ",
-        "i mean ", "i mean, ", "wait ", "wait, ", "not that ", "not this ", "instead "
+        "no ",
+        "no, ",
+        "actually ",
+        "actually, ",
+        "sorry ",
+        "sorry, ",
+        "i mean ",
+        "i mean, ",
+        "wait ",
+        "wait, ",
+        "not that ",
+        "not this ",
+        "instead ",
     ]
     cleaned = text.strip().lower()
     for p in prefixes:
         if cleaned.startswith(p):
-            return cleaned[len(p):].strip()
+            return cleaned[len(p) :].strip()
     return cleaned
 
+
 def _semantic_guard_replacements(text: str) -> str:
-        t = _normalize(text)
+    t = _normalize(text)
 
-        protected_pairs = {
-            "ice cream": "ice cream",
-            "iced coffee": "iced coffee",
-            "ice coffee": "iced coffee",
-            "cold coffee": "iced coffee",
-            }
+    protected_pairs = {
+        "ice cream": "ice cream",
+        "iced coffee": "iced coffee",
+        "ice coffee": "iced coffee",
+        "cold coffee": "iced coffee",
+    }
 
-        for wrongish, canonical in protected_pairs.items():
-            if wrongish in t:
-                return canonical
-        
-        return t
+    for wrongish, canonical in protected_pairs.items():
+        if wrongish in t:
+            return canonical
+
+    return t
 
 
 def _spoken_join(items):
@@ -119,8 +133,17 @@ def _contains_greeting(text: str) -> bool:
 def _contains_correction(text: str) -> bool:
     t = _normalize(text)
     correction_markers = [
-        "no", "not", "i said", "i mean", "not that", "not this",
-        "instead", "actually", "wrong", "not ice cream", "not from"
+        "no",
+        "not",
+        "i said",
+        "i mean",
+        "not that",
+        "not this",
+        "instead",
+        "actually",
+        "wrong",
+        "not ice cream",
+        "not from",
     ]
     return any(marker in t for marker in correction_markers)
 
@@ -128,9 +151,17 @@ def _contains_correction(text: str) -> bool:
 def _contains_recommendation_request(text: str) -> bool:
     t = _normalize(text)
     triggers = [
-        "recommend", "suggest", "what's good", "what is good",
-        "popular", "best", "what do people get", "what should i order",
-        "something nice", "what do you suggest", "what do you recommend"
+        "recommend",
+        "suggest",
+        "what's good",
+        "what is good",
+        "popular",
+        "best",
+        "what do people get",
+        "what should i order",
+        "something nice",
+        "what do you suggest",
+        "what do you recommend",
     ]
     return any(x in t for x in triggers)
 
@@ -138,8 +169,14 @@ def _contains_recommendation_request(text: str) -> bool:
 def _contains_browse_style_request(text: str) -> bool:
     t = _normalize(text)
     triggers = [
-        "show me", "i want to see", "what do you have", "explore",
-        "see options", "what options", "what all", "available"
+        "show me",
+        "i want to see",
+        "what do you have",
+        "explore",
+        "see options",
+        "what options",
+        "what all",
+        "available",
     ]
     return any(x in t for x in triggers)
 
@@ -147,8 +184,19 @@ def _contains_browse_style_request(text: str) -> bool:
 def _contains_chitchat(text: str) -> bool:
     t = _normalize(text)
     phrases = {
-        "oh nice", "nice", "okay", "ok", "hmm", "hmmm", "cool",
-        "sounds good", "great", "oh", "i like it", "good", "alright"
+        "oh nice",
+        "nice",
+        "okay",
+        "ok",
+        "hmm",
+        "hmmm",
+        "cool",
+        "sounds good",
+        "great",
+        "oh",
+        "i like it",
+        "good",
+        "alright",
     }
     return t in phrases or (len(t.split()) <= 3 and t in phrases)
 
@@ -156,9 +204,16 @@ def _contains_chitchat(text: str) -> bool:
 def _contains_favorite_question(text: str) -> bool:
     t = _normalize(text)
     triggers = [
-        "your favorite", "what's your favorite", "what is your favorite",
-        "what do you like", "what do people like", "popular one",
-        "most popular", "best seller", "customer favorite", "favourite"
+        "your favorite",
+        "what's your favorite",
+        "what is your favorite",
+        "what do you like",
+        "what do people like",
+        "popular one",
+        "most popular",
+        "best seller",
+        "customer favorite",
+        "favourite",
     ]
     return any(x in t for x in triggers)
 
@@ -167,10 +222,20 @@ def _extract_order_type(text: str):
     t = _normalize(text)
 
     pickup_signals = [
-        "pickup", "pick up", "takeaway", "take away", "carry out", "to go"
+        "pickup",
+        "pick up",
+        "takeaway",
+        "take away",
+        "carry out",
+        "to go",
     ]
     dinein_signals = [
-        "dine in", "dine-in", "dining", "eat here", "for here", "sit here"
+        "dine in",
+        "dine-in",
+        "dining",
+        "eat here",
+        "for here",
+        "sit here",
     ]
 
     if any(x in t for x in pickup_signals):
@@ -245,6 +310,7 @@ def _match(text, options, cutoff=0.70):
 # MENU HELPERS
 # =========================================================
 
+
 def _get_categories():
     return list(MENU.keys())
 
@@ -307,37 +373,65 @@ def _find_category_and_subcategory_for_item(item):
 # INTENT / FLOW HELPERS
 # =========================================================
 
+
 def _is_go_back(text):
     text = _normalize(text)
-    return any(x in text for x in [
-        "go back", "back", "previous", "start again", "restart",
-        "change category", "show categories", "main menu"
-    ])
+    return any(
+        x in text
+        for x in [
+            "go back",
+            "back",
+            "previous",
+            "start again",
+            "restart",
+            "change category",
+            "show categories",
+            "main menu",
+        ]
+    )
 
 
 def _is_menu_request(text):
     text = _normalize(text)
     triggers = [
-        "menu", "show menu", "what do you have", "what is available",
-        "what can i order", "categories", "options", "menu please",
-        "what are the menus", "menus present"
+        "menu",
+        "show menu",
+        "what do you have",
+        "what is available",
+        "what can i order",
+        "categories",
+        "options",
+        "menu please",
+        "what are the menus",
+        "menus present",
     ]
     return any(t in text for t in triggers)
 
 
 def _is_more_order(text):
     text = _normalize(text)
-    return any(x in text for x in [
-        "yes", "yeah", "yep", "more", "another", "something else",
-        "add more", "one more", "continue"
-    ])
+    return any(
+        x in text
+        for x in [
+            "yes",
+            "yeah",
+            "yep",
+            "more",
+            "another",
+            "something else",
+            "add more",
+            "one more",
+            "continue",
+        ]
+    )
 
 
 def _is_done(text):
     text = _normalize(text)
-    return any(x in text for x in [
-        "no", "done", "nothing", "that's all", "thats all", "finish", "nope"
-    ])
+    return any(
+        x in text
+        for x in ["no", "done", "nothing", "that's all", "thats all", "finish", "nope"]
+    )
 
 
 def _is_exit(text):
@@ -357,23 +451,22 @@ def _cart_summary():
     parts = []
     for item in state["cart"]:
         if item.get("size"):
-            parts.append(f'{item["item"]} {item["size"]} - {_format_price(item["price"])} AED')
+            parts.append(
+                f"{item['item']} {item['size']} - {_format_price(item['price'])} AED"
+            )
         else:
-            parts.append(f'{item["item"]} - {_format_price(item["price"])} AED')
+            parts.append(f"{item['item']} - {_format_price(item['price'])} AED")
     return ", ".join(parts)
 
 
 def _add_to_cart(item_name, price, size=None):
-    state["cart"].append({
-        "item": item_name,
-        "size": size,
-        "price": price
-    })
+    state["cart"].append({"item": item_name, "size": size, "price": price})
 
 
 # =========================================================
 # FLOW PROMPTS
 # =========================================================
+
 
 def _ask_categories():
     cats = _get_categories()
@@ -387,7 +480,9 @@ def _ask_subcategories(category):
 
 def _ask_items(category, subcategory):
     items = _get_items(category, subcategory)
-    return f"In {subcategory} we have {_spoken_join(items)}. What would you like to order?"
+    return (
+        f"In {subcategory} we have {_spoken_join(items)}. What would you like to order?"
+    )
 
 
 def _ask_sizes_for_pending():
@@ -399,6 +494,7 @@ def _ask_sizes_for_pending():
 # VALIDATION / NAME MEMORY
 # =========================================================
 
+
 def _extract_name(text: str) -> str | None:
     if not text:
         return None
@@ -408,15 +504,22 @@ def _extract_name(text: str) -> str | None:
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
 
     intro_patterns = [
-        "hello my name is", "my name is", "name is",
-        "hello i am", "i am", "i'm",
-        "hello this is", "this is", "call me", "order for",
+        "hello my name is",
+        "my name is",
+        "name is",
+        "hello i am",
+        "i am",
+        "i'm",
+        "hello this is",
+        "this is",
+        "call me",
+        "order for",
     ]
 
     candidate = None
     for intro in intro_patterns:
         if cleaned.startswith(intro):
-            candidate = cleaned[len(intro):].strip()
+            candidate = cleaned[len(intro) :].strip()
             break
 
     if not candidate:
@@ -433,9 +536,28 @@ def _extract_name(text: str) -> str | None:
         return None
 
     banned_words = {
-        "interested", "coffee", "cream", "menu", "pickup", "dine", "cold",
-        "drink", "drinks", "ice", "iced", "waffle", "dessert", "hot", "show",
-        "want", "today", "tomorrow", "now", "later", "yes", "no"
+        "interested",
+        "coffee",
+        "cream",
+        "menu",
+        "pickup",
+        "dine",
+        "cold",
+        "drink",
+        "drinks",
+        "ice",
+        "iced",
+        "waffle",
+        "dessert",
+        "hot",
+        "show",
+        "want",
+        "today",
+        "tomorrow",
+        "now",
+        "later",
+        "yes",
+        "no",
     }
 
     if any(w in banned_words for w in words):
@@ -456,19 +578,38 @@ def _is_valid_people_count(text: str) -> bool:
 
 def _is_valid_datetime(text: str) -> bool:
     text = text.strip()
-    return len(text) >= 3 and _normalize(text) not in {"asdf", "test", "nothing", "idk", "don't know", "dont know"}
+    return len(text) >= 3 and _normalize(text) not in {
+        "asdf",
+        "test",
+        "nothing",
+        "idk",
+        "don't know",
+        "dont know",
+    }
 
 
 # =========================================================
 # EARLY WARMUP / INCOMPLETE INTENT GUARDS
 # =========================================================
 
+
 def _looks_like_early_warmup_input(text: str) -> bool:
     t = _normalize(text)
     warmup_signals = [
-        "hello", "hi", "hey", "yeah", "yes", "hii",
-        "can you hear me", "myself", "this side",
-        "i am", "my name", "name is", "here", "speaking"
+        "hello",
+        "hi",
+        "hey",
+        "yeah",
+        "yes",
+        "hii",
+        "can you hear me",
+        "myself",
+        "this side",
+        "i am",
+        "my name",
+        "name is",
+        "here",
+        "speaking",
     ]
     if any(x in t for x in warmup_signals):
         return True
@@ -480,9 +621,22 @@ def _looks_like_early_warmup_input(text: str) -> bool:
 def _is_incomplete_order_leadin(text: str) -> bool:
     t = _normalize(text)
     bad_phrases = [
-        "i would like", "i want", "can i have", "let me see", "show me",
-        "maybe", "something", "that one", "this one", "one please",
-        "uh", "um", "hmm", "hmmm", "wait", "hold on"
+        "i would like",
+        "i want",
+        "can i have",
+        "let me see",
+        "show me",
+        "maybe",
+        "something",
+        "that one",
+        "this one",
+        "one please",
+        "uh",
+        "um",
+        "hmm",
+        "hmmm",
+        "wait",
+        "hold on",
     ]
     return t in bad_phrases
 
@@ -490,6 +644,7 @@ def _is_incomplete_order_leadin(text: str) -> bool:
 # =========================================================
 # NATURAL FALLBACK / RECOMMENDATION
 # =========================================================
+
 
 def _build_system_prompt():
     return """
@@ -574,6 +729,7 @@ def _llm_natural_interpretation(user_text: str, llm_fn=None) -> str | None:
 # FLEXIBLE NAVIGATION ROUTER
 # =========================================================
 
+
 def _resolve_user_navigation(text: str):
     raw = text.strip()
     norm = _normalize(raw)
@@ -598,7 +754,11 @@ def _resolve_user_navigation(text: str):
         if item:
             return {"type": "correction_item", "item": item, "confidence": 0.95}
         if sub:
-            return {"type": "correction_subcategory", "subcategory": sub, "confidence": 0.92}
+            return {
+                "type": "correction_subcategory",
+                "subcategory": sub,
+                "confidence": 0.92,
+            }
         if cat:
             return {"type": "correction_category", "category": cat, "confidence": 0.90}
 
@@ -608,15 +768,19 @@ def _resolve_user_navigation(text: str):
             "category": cat,
             "subcategory": sub,
             "item": item,
-            "confidence": 0.85
+            "confidence": 0.85,
         }
 
     if _contains_browse_style_request(norm):
-      # IMPORTANT:
+        # IMPORTANT:
         # For browse/explore language, prefer category/subcategory navigation
         # before direct item selection.
         if sub:
-            return {"type": "switch_subcategory", "subcategory": sub, "confidence": 0.90}
+            return {
+                "type": "switch_subcategory",
+                "subcategory": sub,
+                "confidence": 0.90,
+            }
         if cat:
             return {"type": "switch_category", "category": cat, "confidence": 0.88}
         if item:
@@ -624,18 +788,23 @@ def _resolve_user_navigation(text: str):
 
     # If user sounds like ordering, allow item first
     orderish_phrases = [
-    "order", "i want", "i would like", "can i have", "give me", "add"
-]
+        "order",
+        "i want",
+        "i would like",
+        "can i have",
+        "give me",
+        "add",
+    ]
 
     if any(p in norm for p in orderish_phrases):
         if item:
-         return {"type": "select_item", "item": item, "confidence": 0.90}
+            return {"type": "select_item", "item": item, "confidence": 0.90}
     if sub:
         return {"type": "switch_subcategory", "subcategory": sub, "confidence": 0.88}
     if cat:
         return {"type": "switch_category", "category": cat, "confidence": 0.86}
 
-# Otherwise prefer navigation first
+    # Otherwise prefer navigation first
     if sub:
         return {"type": "switch_subcategory", "subcategory": sub, "confidence": 0.88}
     if cat:
@@ -649,6 +818,7 @@ def _resolve_user_navigation(text: str):
 # =========================================================
 # APPLY FLEXIBLE NAVIGATION
 # =========================================================
+
 
 def _apply_navigation(intent: dict, raw_text: str):
     t = intent.get("type")
@@ -702,7 +872,11 @@ def _apply_navigation(intent: dict, raw_text: str):
         if len(options) == 1:
             price = options[0]["price"]
             size = options[0]["size"]
-            spoken_size = size if size and size.lower() not in ["regular", "default", "standard"] else None
+            spoken_size = (
+                size
+                if size and size.lower() not in ["regular", "default", "standard"]
+                else None
+            )
             _add_to_cart(item, price, spoken_size)
             state["step"] = "more"
             return f"The {item} is {_format_price(price)} AED. Added to your order. Would you like anything else?"
@@ -717,7 +891,9 @@ def _apply_navigation(intent: dict, raw_text: str):
         if not chosen_size or not state["pending_item"]:
             return None
 
-        chosen = next((opt for opt in state["pending_sizes"] if opt["size"] == chosen_size), None)
+        chosen = next(
+            (opt for opt in state["pending_sizes"] if opt["size"] == chosen_size), None
+        )
         if not chosen:
             return None
 
@@ -767,6 +943,7 @@ def _apply_navigation(intent: dict, raw_text: str):
 # MAIN HANDLER
 # =========================================================
 
+
 def handleUserInput(user_text: str, llm_fn=None) -> str:
     global state
 
@@ -779,14 +956,19 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
     raw_norm = _normalize(text)
     norm = _strip_correction_prefixes(raw_norm)
 
-
     # EXIT
     if _is_exit(norm):
         return "Thank you for calling Crumbs and Cream. Have a lovely day!"
 
     # SOFT NAME MEMORY
-    if state["step"] not in ["details_name", "details_phone", "details_people",
-                             "details_type", "details_datetime", "confirm"]:
+    if state["step"] not in [
+        "details_name",
+        "details_phone",
+        "details_people",
+        "details_type",
+        "details_datetime",
+        "confirm",
+    ]:
         extracted_name = _extract_name(text)
         if extracted_name:
             if not state.get("name"):
@@ -838,8 +1020,12 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
 
     # GLOBAL ORDER TYPE CORRECTION
     if state["step"] in [
-        "details_type", "details_people", "details_name",
-        "details_phone", "details_datetime", "confirm"
+        "details_type",
+        "details_people",
+        "details_name",
+        "details_phone",
+        "details_datetime",
+        "confirm",
     ]:
         detected_order_type = _extract_order_type(norm)
 
@@ -858,7 +1044,12 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
         if detected_order_type == "dine-in":
             state["order_type"] = "dine-in"
 
-            if state["step"] in ["details_type", "details_name", "details_phone", "details_datetime"]:
+            if state["step"] in [
+                "details_type",
+                "details_name",
+                "details_phone",
+                "details_datetime",
+            ]:
                 state["step"] = "details_people"
                 return "Got it — this will be for dine-in. For how many people?"
 
@@ -880,8 +1071,14 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
         return _ask_categories()
 
     # FLEXIBLE NAVIGATION LAYER
-    if state["step"] not in ["details_name", "details_phone", "details_people",
-                             "details_type", "details_datetime", "confirm"]:
+    if state["step"] not in [
+        "details_name",
+        "details_phone",
+        "details_people",
+        "details_type",
+        "details_datetime",
+        "confirm",
+    ]:
         nav_intent = _resolve_user_navigation(text)
         state["last_user_intent"] = nav_intent
         nav_reply = _apply_navigation(nav_intent, text)
@@ -936,7 +1133,11 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
         if len(options) == 1:
             price = options[0]["price"]
             size = options[0]["size"]
-            spoken_size = size if size and size.lower() not in ["regular", "default", "standard"] else None
+            spoken_size = (
+                size
+                if size and size.lower() not in ["regular", "default", "standard"]
+                else None
+            )
             _add_to_cart(item, price, spoken_size)
             state["step"] = "more"
             return f"The {item} is {_format_price(price)} AED. Added to your order. Would you like anything else?"
@@ -952,7 +1153,9 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
         if not chosen_size:
             return _ask_sizes_for_pending()
 
-        chosen = next((opt for opt in state["pending_sizes"] if opt["size"] == chosen_size), None)
+        chosen = next(
+            (opt for opt in state["pending_sizes"] if opt["size"] == chosen_size), None
+        )
         if not chosen:
             return "Sorry, I didn't catch the size. Could you repeat?"
 
@@ -1030,7 +1233,10 @@ def handleUserInput(user_text: str, llm_fn=None) -> str:
         extracted_name = _extract_name(text)
         if not extracted_name:
             if len(text.split()) <= 4 and re.search(r"[A-Za-z]", text):
-                extracted_name = " ".join(w.capitalize() for w in re.findall(r"[A-Za-z][A-Za-z'\-]*", text)[:4])
+                extracted_name = " ".join(
+                    w.capitalize()
+                    for w in re.findall(r"[A-Za-z][A-Za-z'\-]*", text)[:4]
+                )
 
         if not extracted_name:
             return "Please tell me a valid name for the order."

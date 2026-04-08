@@ -18,6 +18,7 @@ from pathlib import Path
 
 # ── .env loading (same priority as the rest of the app) ──────────────────────
 from dotenv import load_dotenv
+
 for _p in [Path(__file__).parent / ".env", Path(__file__).parent.parent / ".env"]:
     if _p.exists():
         load_dotenv(dotenv_path=_p, override=False)
@@ -63,6 +64,7 @@ for mid in gpt_ids:
 try:
     sys.path.insert(0, str(Path(__file__).parent))
     from openai_brain import MODEL_CONFIGS, get_model_name
+
     active_model = get_model_name()
     print(f"\n[>] Active model (LLM_MODEL env): {active_model}")
     print("[>] Checking all registered models from openai_brain.MODEL_CONFIGS ...")
@@ -74,7 +76,9 @@ try:
             missing.append(mid)
 
     if missing:
-        print(f"\n[WARN] {len(missing)} model(s) not accessible for this key: {missing}")
+        print(
+            f"\n[WARN] {len(missing)} model(s) not accessible for this key: {missing}"
+        )
     else:
         print("[OK]   All registered models are accessible.")
 
@@ -91,12 +95,20 @@ print(f"\n[>] Test chat completion with '{test_model}' ...")
 t0 = time.perf_counter()
 try:
     import re
-    token_kwarg = {"max_completion_tokens": 10} if re.match(r"gpt-5", test_model) else {"max_tokens": 10}
+
+    token_kwarg = (
+        {"max_completion_tokens": 10}
+        if re.match(r"gpt-5", test_model)
+        else {"max_tokens": 10}
+    )
     resp = client.chat.completions.create(
         model=test_model,
         messages=[
-            {"role": "system", "content": "You are a café assistant. Reply in 5 words max."},
-            {"role": "user",   "content": "Say hi."},
+            {
+                "role": "system",
+                "content": "You are a café assistant. Reply in 5 words max.",
+            },
+            {"role": "user", "content": "Say hi."},
         ],
         temperature=0.3,
         **token_kwarg,

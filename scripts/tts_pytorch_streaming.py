@@ -29,16 +29,14 @@ from moshi.models.tts import (
     script_to_entries,
 )
 
-import torch
 
 print("CUDA available:", torch.cuda.is_available())
 print("GPU count:", torch.cuda.device_count())
 
 if torch.cuda.is_available():
-    print("GPU name:", torch.cuda.get_device_name(0)) 
+    print("GPU name:", torch.cuda.get_device_name(0))
 
 
-    
 def prepare_script(model: TTSModel, script: str, first_turn: bool) -> list[Entry]:
     multi_speaker = first_turn and model.multi_speaker
     return script_to_entries(

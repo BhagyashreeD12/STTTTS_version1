@@ -25,6 +25,7 @@ import json
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class FlowStep:
     """
@@ -41,6 +42,7 @@ class FlowStep:
     voice_eligible  : Whether this step can be handled entirely by voice
     loop_context    : If inside a driver/vehicle loop, which iteration (e.g. "Driver 2 of 3")
     """
+
     step_id: str
     block: str
     question_text: str
@@ -76,6 +78,7 @@ class SessionState:
     whatsapp_number     : Phone number collected for WhatsApp document upload
     extra               : Catch-all dict for any ad-hoc metadata
     """
+
     call_sid: str = ""
     agent_name: str = "Sarah"
     collected_answers: dict[str, Any] = field(default_factory=dict)
@@ -109,6 +112,7 @@ class PromptConfig:
     temperature_hint        : Informational only — set on the API call, not in the prompt
     province                : Canadian province for any region-specific phrasing
     """
+
     max_response_sentences: int = 3
     allow_clarification: bool = True
     max_clarification_tries: int = 2
@@ -218,6 +222,7 @@ def build_system_prompt(
 # Flow context builder
 # ---------------------------------------------------------------------------
 
+
 def build_flow_context(
     current_step: FlowStep,
     allowed_next_steps: list[str],
@@ -263,7 +268,9 @@ def build_flow_context(
     if current_step.expected_answer:
         lines.append(f"Expected ans : {current_step.expected_answer}")
 
-    lines.append(f"Voice OK     : {'Yes' if current_step.voice_eligible else 'No — prompt user to text/WhatsApp'}")
+    lines.append(
+        f"Voice OK     : {'Yes' if current_step.voice_eligible else 'No — prompt user to text/WhatsApp'}"
+    )
 
     if allowed_next_steps:
         lines.append(f"Next steps   : {', '.join(allowed_next_steps)}")
@@ -298,6 +305,7 @@ def build_flow_context(
 # Session context builder
 # ---------------------------------------------------------------------------
 
+
 def build_session_context(session: SessionState) -> str:
     """
     Serialize the current session state as a readable context block.
@@ -320,12 +328,16 @@ def build_session_context(session: SessionState) -> str:
     if session.driver_count:
         lines.append(f"Drivers in household: {session.driver_count}")
     if session.current_driver_idx > 1:
-        lines.append(f"Currently on driver : {session.current_driver_idx} of {session.driver_count}")
+        lines.append(
+            f"Currently on driver : {session.current_driver_idx} of {session.driver_count}"
+        )
 
     if session.vehicle_count:
         lines.append(f"Vehicles            : {session.vehicle_count}")
     if session.current_vehicle_idx > 1:
-        lines.append(f"Currently on vehicle: {session.current_vehicle_idx} of {session.vehicle_count}")
+        lines.append(
+            f"Currently on vehicle: {session.current_vehicle_idx} of {session.vehicle_count}"
+        )
 
     if session.modification_flag:
         lines.append("Vehicle modification: YES — broker referral already noted")
@@ -535,6 +547,7 @@ def get_few_shot_examples() -> str:
 # Master agent prompt builder
 # ---------------------------------------------------------------------------
 
+
 def build_agent_prompt(
     current_step: FlowStep,
     allowed_next_steps: list[str],
@@ -613,6 +626,7 @@ def build_agent_prompt(
 # Specialised prompt builders for edge-case turns
 # ---------------------------------------------------------------------------
 
+
 def build_clarification_prompt(
     current_step: FlowStep,
     session: SessionState,
@@ -638,10 +652,10 @@ def build_clarification_prompt(
         Messages list ready for the completions API.
     """
     reason_hints = {
-        "unclear":        "The caller's answer wasn't clear enough — couldn't parse an intent or value from it.",
+        "unclear": "The caller's answer wasn't clear enough — couldn't parse an intent or value from it.",
         "invalid_format": "The caller gave something in the wrong format — for example, a date said incorrectly.",
-        "out_of_range":   "The answer doesn't fit what's expected — outside the valid range or options.",
-        "no_answer":      "The caller didn't really answer — went off on a tangent or stayed silent.",
+        "out_of_range": "The answer doesn't fit what's expected — outside the valid range or options.",
+        "no_answer": "The caller didn't really answer — went off on a tangent or stayed silent.",
     }
     hint = reason_hints.get(reason, reason_hints["unclear"])
 
@@ -660,7 +674,10 @@ def build_clarification_prompt(
     messages = [
         {"role": "system", "content": system_text},
         {"role": "user", "content": f"{session_block}\n\n{clarification_instruction}"},
-        {"role": "user", "content": "Re-ask now — natural, brief, different wording than before."},
+        {
+            "role": "user",
+            "content": "Re-ask now — natural, brief, different wording than before.",
+        },
     ]
     return messages
 
@@ -691,7 +708,7 @@ def build_objection_prompt(
 
     objection_instruction = (
         f"## CALLER PUSHED BACK\n"
-        f"Caller said: \"{objection_text}\"\n"
+        f'Caller said: "{objection_text}"\n'
         f"Current step: {current_step.step_id} — {current_step.question_text}\n\n"
         "Acknowledge it briefly — one short sentence. Don't over-explain or over-reassure.\n"
         "Then either re-ask lightly, or offer to let the broker handle it if they're really not comfortable.\n"
@@ -733,7 +750,7 @@ def build_redirect_prompt(
 
     redirect_instruction = (
         f"## CALLER WENT OFF-TOPIC\n"
-        f"Caller said: \"{off_topic_text}\"\n"
+        f'Caller said: "{off_topic_text}"\n'
         f"Current step: {current_step.step_id} — {current_step.question_text}\n\n"
         "One short redirect — something like 'Your broker can cover that.' "
         "Do not answer the off-topic question. Do not explain why you can't. "
@@ -743,7 +760,10 @@ def build_redirect_prompt(
     messages = [
         {"role": "system", "content": system_text},
         {"role": "user", "content": f"{session_block}\n\n{redirect_instruction}"},
-        {"role": "user", "content": "Redirect now, then ask the question — short and natural."},
+        {
+            "role": "user",
+            "content": "Redirect now, then ask the question — short and natural.",
+        },
     ]
     return messages
 
@@ -827,6 +847,7 @@ def build_wrap_up_prompt(
 # Utility helpers
 # ---------------------------------------------------------------------------
 
+
 def format_options_for_voice(options: list[str]) -> str:
     """
     Convert a list of options into a natural spoken string.
@@ -851,17 +872,22 @@ def format_options_for_voice(options: list[str]) -> str:
 def session_to_json(session: SessionState) -> str:
     """Serialize a SessionState to a JSON string for logging / persistence."""
     import dataclasses
+
     return json.dumps(dataclasses.asdict(session), indent=2, default=str)
 
 
 def session_from_dict(data: dict) -> SessionState:
     """Reconstruct a SessionState from a plain dict (e.g. loaded from JSON)."""
-    return SessionState(**{k: v for k, v in data.items() if k in SessionState.__dataclass_fields__})
+    return SessionState(
+        **{k: v for k, v in data.items() if k in SessionState.__dataclass_fields__}
+    )
 
 
 def flow_step_from_dict(data: dict) -> FlowStep:
     """Construct a FlowStep from a plain dict (e.g. from the parsed Excel row)."""
-    return FlowStep(**{k: v for k, v in data.items() if k in FlowStep.__dataclass_fields__})
+    return FlowStep(
+        **{k: v for k, v in data.items() if k in FlowStep.__dataclass_fields__}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -874,34 +900,53 @@ from datetime import date as _date, datetime as _datetime
 _PHONE_STRIP_RE = _re.compile(r"\D")
 
 _MONTH_NAMES: dict[str, int] = {
-    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
-    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
 }
 _MONTH_ABBR: dict[str, int] = {k[:3]: v for k, v in _MONTH_NAMES.items()}
 
 _WORD_NUMS: dict[str, int] = {
-    "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "zero": 0,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
 }
 
 # Map step IDs to their validator type
 _STEP_VALIDATORS: dict[str, str] = {
-    "1.2": "phone",       # WhatsApp number
-    "1.3": "date",        # Policy effective date
-    "1.4": "yes_no",      # Vehicle modifications?
-    "2.1": "drivers",     # Number of drivers
-    "2.2": "yes_no",      # Registered owner / main driver?
-    "2.4": "yes_no",      # Additional driver also listed?
+    "1.2": "phone",  # WhatsApp number
+    "1.3": "date",  # Policy effective date
+    "1.4": "yes_no",  # Vehicle modifications?
+    "2.1": "drivers",  # Number of drivers
+    "2.2": "yes_no",  # Registered owner / main driver?
+    "2.4": "yes_no",  # Additional driver also listed?
     "2.6": "month_year",  # Licence issue date
-    "2.7": "yes_no",      # Driver training certificate?
-    "2.8": "yes_no",      # Retiree discount?
-    "2.9": "yes_no",      # Retiree discount confirmation
-    "3.1": "vehicles",    # Number of vehicles
-    "3.9": "yes_no",      # Winter tires?
-    "4.4": "mileage",     # Annual kilometres
-    "5.1": "yes_no",      # Policy cancellation history?
-    "5.2": "yes_no",      # Accidents / claims?
-    "5.3": "yes_no",      # Licence suspension?
+    "2.7": "yes_no",  # Driver training certificate?
+    "2.8": "yes_no",  # Retiree discount?
+    "2.9": "yes_no",  # Retiree discount confirmation
+    "3.1": "vehicles",  # Number of vehicles
+    "3.9": "yes_no",  # Winter tires?
+    "4.4": "mileage",  # Annual kilometres
+    "5.1": "yes_no",  # Policy cancellation history?
+    "5.2": "yes_no",  # Accidents / claims?
+    "5.3": "yes_no",  # Licence suspension?
 }
 
 
@@ -940,10 +985,20 @@ def validate_date(text: str, allow_past: bool = False) -> tuple[bool, str, str]:
     """
     text = text.strip()
     _formats = [
-        "%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%d-%m-%Y",
-        "%B %d %Y", "%b %d %Y", "%d %B %Y", "%d %b %Y",
-        "%B %d, %Y", "%b %d, %Y",
-        "%B %d %y", "%b %d %y", "%d %B %y", "%d %b %y",  # 2-digit year forms
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%m/%d/%Y",
+        "%d-%m-%Y",
+        "%B %d %Y",
+        "%b %d %Y",
+        "%d %B %Y",
+        "%d %b %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%B %d %y",
+        "%b %d %y",
+        "%d %B %y",
+        "%d %b %y",  # 2-digit year forms
     ]
     parsed: Optional[_date] = None
     for fmt in _formats:
@@ -1029,7 +1084,7 @@ def validate_month_year(text: str) -> tuple[bool, str, str]:
     if m:
         mon_str, yr2 = m.group(1), int(m.group(2))
         mo = _MONTH_NAMES.get(mon_str) or _MONTH_ABBR.get(mon_str[:3])
-        yr = 2000 + yr2 if yr2 < 69 else 1900 + yr2   # Python %y convention
+        yr = 2000 + yr2 if yr2 < 69 else 1900 + yr2  # Python %y convention
         if mo and 1950 <= yr <= today_year:
             return True, f"{yr:04d}-{mo:02d}", ""
         if mo:
@@ -1038,7 +1093,9 @@ def validate_month_year(text: str) -> tuple[bool, str, str]:
     return False, "", "unrecognised_format"
 
 
-def validate_integer(text: str, min_val: int = 1, max_val: int = 100) -> tuple[bool, int, str]:
+def validate_integer(
+    text: str, min_val: int = 1, max_val: int = 100
+) -> tuple[bool, int, str]:
     """
     Validate a spoken/typed integer (drivers, vehicles, mileage).
 
@@ -1089,9 +1146,20 @@ def validate_yes_no(text: str) -> tuple[bool, str, str]:
     error_reason is one of: "" | "unclear_yes_no"
     """
     text_lower = text.strip().lower()
-    _YES = {"yes", "yeah", "yep", "yup", "sure", "correct", "right",
-            "definitely", "absolutely", "of course", "that's right"}
-    _NO  = {"no", "nope", "nah", "not really", "never", "no i haven't", "no i don't"}
+    _YES = {
+        "yes",
+        "yeah",
+        "yep",
+        "yup",
+        "sure",
+        "correct",
+        "right",
+        "definitely",
+        "absolutely",
+        "of course",
+        "that's right",
+    }
+    _NO = {"no", "nope", "nah", "not really", "never", "no i haven't", "no i don't"}
     for w in _YES:
         if w in text_lower:
             return True, "yes", ""
@@ -1212,7 +1280,6 @@ if __name__ == "__main__":
         print(f"\n[{role}]\n{content}\n")
         print("-" * 60)
 
-
     # ---------------------------------------------------------------------------
 # Backward compatibility exports
 # ---------------------------------------------------------------------------
@@ -1269,63 +1336,143 @@ def build_naturalize_prompt(
 # ---------------------------------------------------------------------------
 
 # ── Negative / refusal patterns ──────────────────────────────────────────────
-_NEG_EXACT = frozenset({
-    "no", "nope", "nah", "nah thanks", "no thanks",
-    "stop", "cancel", "quit", "abort",
-    "decline", "refuse", "rejected",
-    "negative", "never",
-})
+_NEG_EXACT = frozenset(
+    {
+        "no",
+        "nope",
+        "nah",
+        "nah thanks",
+        "no thanks",
+        "stop",
+        "cancel",
+        "quit",
+        "abort",
+        "decline",
+        "refuse",
+        "rejected",
+        "negative",
+        "never",
+    }
+)
 
 _NEG_FRAGMENTS: tuple[str, ...] = (
     # Direct negatives
-    "not okay", "not ok", "not alright", "not fine", "thats not okay",
-    "that is not okay", "im not okay", "i am not okay",
+    "not okay",
+    "not ok",
+    "not alright",
+    "not fine",
+    "thats not okay",
+    "that is not okay",
+    "im not okay",
+    "i am not okay",
     # Comfort / willingness
-    "not comfortable", "not happy with", "not interested",
-    "dont want", "do not want", "i dont want", "i do not want",
-    "dont wish", "do not wish",
-    "id rather not", "i would rather not",
-    "id prefer not", "i would prefer not",
+    "not comfortable",
+    "not happy with",
+    "not interested",
+    "dont want",
+    "do not want",
+    "i dont want",
+    "i do not want",
+    "dont wish",
+    "do not wish",
+    "id rather not",
+    "i would rather not",
+    "id prefer not",
+    "i would prefer not",
     # Consent-specific
-    "not consent", "dont consent", "do not consent", "withhold consent",
-    "not agree", "dont agree", "do not agree",
-    "not accept", "dont accept", "do not accept",
+    "not consent",
+    "dont consent",
+    "do not consent",
+    "withhold consent",
+    "not agree",
+    "dont agree",
+    "do not agree",
+    "not accept",
+    "dont accept",
+    "do not accept",
     # Continuation
-    "dont continue", "do not continue",
-    "dont proceed", "do not proceed",
+    "dont continue",
+    "do not continue",
+    "dont proceed",
+    "do not proceed",
     # Disinterest
-    "not at this time", "not right now", "not today",
-    "not for me", "this isnt for me", "this is not for me",
-    "not looking", "im good thanks",
+    "not at this time",
+    "not right now",
+    "not today",
+    "not for me",
+    "this isnt for me",
+    "this is not for me",
+    "not looking",
+    "im good thanks",
 )
 
 # ── Affirmative patterns ──────────────────────────────────────────────────────
 # _AFF_EXACT: single words / short complete answers that are ONLY affirmative
-_AFF_EXACT = frozenset({
-    "yes", "yeah", "yep", "yup", "sure", "ok", "okay", "fine",
-    "alright", "agreed",
-})
+_AFF_EXACT = frozenset(
+    {
+        "yes",
+        "yeah",
+        "yep",
+        "yup",
+        "sure",
+        "ok",
+        "okay",
+        "fine",
+        "alright",
+        "agreed",
+    }
+)
 
 _AFF_FRAGMENTS: tuple[str, ...] = (
-    "thats okay", "that is okay", "thats fine", "that is fine",
-    "thats alright", "that is alright",
-    "i agree", "i accept", "i consent", "im okay", "i am okay",
-    "im fine", "i am fine", "im happy", "i am happy",
-    "go right ahead", "please continue", "carry on", "go ahead",
-    "absolutely", "definitely", "of course", "no problem",
-    "sounds good", "works for me", "that works",
-    "sure thing", "alright then",
+    "thats okay",
+    "that is okay",
+    "thats fine",
+    "that is fine",
+    "thats alright",
+    "that is alright",
+    "i agree",
+    "i accept",
+    "i consent",
+    "im okay",
+    "i am okay",
+    "im fine",
+    "i am fine",
+    "im happy",
+    "i am happy",
+    "go right ahead",
+    "please continue",
+    "carry on",
+    "go ahead",
+    "absolutely",
+    "definitely",
+    "of course",
+    "no problem",
+    "sounds good",
+    "works for me",
+    "that works",
+    "sure thing",
+    "alright then",
 )
 
 # ── Ambiguous / soft-negative patterns ───────────────────────────────────────
 _AMB_FRAGMENTS: tuple[str, ...] = (
-    "i dont think so", "i do not think so",
-    "maybe not", "probably not", "not sure",
-    "im not sure", "i am not sure", "not certain",
-    "i suppose not", "i guess not",
-    "ill have to think", "i need to think",
-    "let me think", "im unsure", "i am unsure",
-    "not really sure", "kind of not",
+    "i dont think so",
+    "i do not think so",
+    "maybe not",
+    "probably not",
+    "not sure",
+    "im not sure",
+    "i am not sure",
+    "not certain",
+    "i suppose not",
+    "i guess not",
+    "ill have to think",
+    "i need to think",
+    "let me think",
+    "im unsure",
+    "i am unsure",
+    "not really sure",
+    "kind of not",
 )
 
 
@@ -1334,8 +1481,8 @@ def _normalise(text: str) -> str:
     then replace all remaining punctuation with spaces, collapse whitespace.
     """
     t = text.lower()
-    t = _re.sub(r"['\u2018\u2019`]", "", t)   # remove apostrophes — "don't" → "dont"
-    t = _re.sub(r"[^\w\s]", " ", t)            # replace other punctuation with space
+    t = _re.sub(r"['\u2018\u2019`]", "", t)  # remove apostrophes — "don't" → "dont"
+    t = _re.sub(r"[^\w\s]", " ", t)  # replace other punctuation with space
     return _re.sub(r"\s+", " ", t).strip()
 
 
@@ -1408,17 +1555,32 @@ def should_exit_flow(text: str) -> bool:
     Examples: "stop", "cancel", "I want to quit", "end the call".
     """
     t = _normalise(text)
-    hard_stops = frozenset({
-        "stop", "cancel", "quit", "abort", "end",
-        "hang up", "bye", "goodbye", "end the call",
-        "i want to stop", "i want to quit", "id like to stop",
-    })
+    hard_stops = frozenset(
+        {
+            "stop",
+            "cancel",
+            "quit",
+            "abort",
+            "end",
+            "hang up",
+            "bye",
+            "goodbye",
+            "end the call",
+            "i want to stop",
+            "i want to quit",
+            "id like to stop",
+        }
+    )
     if t in hard_stops:
         return True
     for phrase in (
-        "want to stop", "want to quit", "want to end",
-        "end this call", "hang up",
-        "dont want to continue", "do not want to continue",
+        "want to stop",
+        "want to quit",
+        "want to end",
+        "end this call",
+        "hang up",
+        "dont want to continue",
+        "do not want to continue",
     ):
         if phrase in t:
             return True
@@ -1433,6 +1595,5 @@ REFUSAL_FAREWELL = (
 )
 
 AMBIGUOUS_CONSENT_CLARIFICATION = (
-    "Just to confirm — you'd prefer not to continue right now? "
-    "Totally fine either way."
+    "Just to confirm — you'd prefer not to continue right now? Totally fine either way."
 )

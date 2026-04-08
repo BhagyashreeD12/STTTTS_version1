@@ -15,10 +15,10 @@ from pathlib import Path
 import openpyxl
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-_HERE       = Path(__file__).parent
-XLSX_PATH   = _HERE.parent.parent / "data" / "VoiceChat_QuestionSequenceAndProb.xlsx"
+_HERE = Path(__file__).parent
+XLSX_PATH = _HERE.parent.parent / "data" / "VoiceChat_QuestionSequenceAndProb.xlsx"
 OUTPUT_JSON = _HERE.parent.parent / "data" / "insurance_flow.json"
-SHEET_NAME  = "Voice Agent Questions"
+SHEET_NAME = "Voice Agent Questions"
 
 # ── Steps that belong to the driver loop (repeat for each driver) ─────────────
 DRIVER_LOOP_STEPS = {"2.2", "2.3", "2.4", "2.4a", "2.5", "2.6", "2.7"}
@@ -28,16 +28,16 @@ VEHICLE_LOOP_STEPS = {"3.3", "3.4", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10"}
 
 # ── Known branching logic names keyed by step ID ──────────────────────────────
 BRANCH_LOGIC: dict[str, str] = {
-    "1.1":  "consent_check",
-    "1.4":  "modifications_check",
-    "2.1":  "driver_loop_start",
-    "2.2":  "registered_owner_check",
-    "2.4":  "applicant_check",
-    "3.1":  "vehicle_loop_start",
-    "3.3":  "principal_driver_check",
-    "3.4":  "ownership_type_check",
-    "7.1":  "confirmation_check",
-    "7.2":  "farewell",
+    "1.1": "consent_check",
+    "1.4": "modifications_check",
+    "2.1": "driver_loop_start",
+    "2.2": "registered_owner_check",
+    "2.4": "applicant_check",
+    "3.1": "vehicle_loop_start",
+    "3.3": "principal_driver_check",
+    "3.4": "ownership_type_check",
+    "7.1": "confirmation_check",
+    "7.2": "farewell",
 }
 
 
@@ -62,12 +62,12 @@ def parse_excel() -> dict:
     current_block: str | None = None
 
     for r in range(2, ws.max_row + 1):
-        q_no   = cell(r, "Question No.")
-        block  = cell(r, "Blocks")
+        q_no = cell(r, "Question No.")
+        block = cell(r, "Blocks")
         q_text = cell(r, "Questions")
-        opts   = cell(r, "Options")
-        exp    = cell(r, "Expected Answer")
-        cond   = cell(r, "Conditions")
+        opts = cell(r, "Options")
+        exp = cell(r, "Expected Answer")
+        cond = cell(r, "Conditions")
 
         # Skip fully empty rows
         if all(v is None for v in [q_no, block, q_text, opts, exp, cond]):
@@ -84,27 +84,27 @@ def parse_excel() -> dict:
         if not q_text:
             continue
 
-        sid      = str(q_no).strip()
+        sid = str(q_no).strip()
         question = str(q_text).strip().replace("\n", " ")
 
         step: dict = {
-            "id":             sid,
-            "block":          current_block or "UNKNOWN",
-            "question":       question,
-            "options":        _parse_options(opts),
-            "expected":       str(exp).strip() if exp else None,
-            "conditions":     str(cond).strip() if cond else None,
-            "branch_logic":   BRANCH_LOGIC.get(sid),
+            "id": sid,
+            "block": current_block or "UNKNOWN",
+            "question": question,
+            "options": _parse_options(opts),
+            "expected": str(exp).strip() if exp else None,
+            "conditions": str(cond).strip() if cond else None,
+            "branch_logic": BRANCH_LOGIC.get(sid),
             "in_driver_loop": sid in DRIVER_LOOP_STEPS,
-            "in_vehicle_loop":sid in VEHICLE_LOOP_STEPS,
+            "in_vehicle_loop": sid in VEHICLE_LOOP_STEPS,
         }
         steps.append(step)
 
     return {
-        "version":      "1.0",
-        "source_file":  XLSX_PATH.name,
+        "version": "1.0",
+        "source_file": XLSX_PATH.name,
         "source_sheet": SHEET_NAME,
-        "steps":        steps,
+        "steps": steps,
     }
 
 
@@ -128,9 +128,12 @@ def main() -> None:
             current_block = s["block"]
             print(f"\n  [{current_block}]")
         tags = []
-        if s["in_driver_loop"]:  tags.append("driver-loop")
-        if s["in_vehicle_loop"]: tags.append("vehicle-loop")
-        if s["branch_logic"]:    tags.append(f"branch:{s['branch_logic']}")
+        if s["in_driver_loop"]:
+            tags.append("driver-loop")
+        if s["in_vehicle_loop"]:
+            tags.append("vehicle-loop")
+        if s["branch_logic"]:
+            tags.append(f"branch:{s['branch_logic']}")
         tag_str = "  " + "  ".join(tags) if tags else ""
         print(f"    {s['id']:6s}  {s['question'][:65]!r}{tag_str}")
 
